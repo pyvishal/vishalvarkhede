@@ -1,69 +1,33 @@
-import torch
-import streamlit as st
-from PIL import Image, ImageDraw
-from torchvision import transforms
-from models.experimental import attempt_load
-from utils.general import non_max_suppression
-from torchvision.transforms import ToPILImage
-
-def load_model(weights_path, device='cuda'):
-    model = attempt_load(weights_path, map_location=device)
-    return model.eval()
-
-def load_segmentation_model(segment_weights_path, device='cuda'):
-    model = attempt_load(segment_weights_path, map_location=device)
-    return model.eval()
-
-def inference_and_save_image(image_path, yolov7_model, segmentation_model, device='cuda', conf_threshold=0.5, iou_threshold=0.45):
-    img_size = 640
-
-    # Load and preprocess image for object detection
-    img = Image.open(image_path)
-    img_tensor = transforms.ToTensor()(img).float().unsqueeze(0).to(device)
-
-    # Perform object detection
-
-    with torch.no_grad():
-        prediction = yolov7_model(img_tensor)[0]
-
-    prediction = non_max_suppression(prediction, conf_threshold, iou_threshold)[0]
-
+def perform_segmentation(segment_model, input_image, bounding_box):
     # Extract bounding box coordinates
-    for box in prediction:
-        if box is not None:
-            box = box.cpu().numpy().astype(int)
-            detected_region = img.crop((box[0], box[1], box[2], box[3]))
+    x_min, y_min, x_max, y_max = bounding_box
 
-            # Perform segmentation on the detected region
-            segmentation_input = transforms.Compose([
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-            ])(detected_region).unsqueeze(0).to(device)
+    # Crop the region of interest (ROI) from the input image based on the bounding box
+    roi = input_image.crop((x_min, y_min, x_max, y_max))
 
-            with torch.no_grad():
-                segmentation_result = segmentation_model(segmentation_input)['out'][0].argmax(0)
+    # Perform any necessary pre-processing on the ROI
+    # For example, you may need to resize or normalize the image before feeding it to the segmentation model
+    # Apply transforms as needed based on the requirements of your segmentation model
+    transform = transforms.Compose([
+        transforms.Resize((desired_height, desired_width)),  # Replace with your desired dimensions
+        transforms.ToTensor(),
+        # Add more transforms if needed
+    ])
 
-            # Overlay segmentation mask on the original image
-            segmentation_mask = ToPILImage()(segmentation_result.byte())
-            detected_region.paste(segmentation_mask, (0, 0), segmentation_mask)
+    input_roi = transform(roi).unsqueeze(0).to(device)  # Assuming 'device' is defined in your code
 
-    return img, detected_region
+    # Perform segmentation on the cropped and pre-processed ROI
+    with torch.no_grad():
+        segmentation_result = segment_model(input_roi)[0]
 
-def main():
-    st.title("Detection App")
+    # Assuming segmentation_result is a binary mask, you may convert it to a PIL Image for visualization
+    segmentation_mask = ToPILImage()(segmentation_result.cpu())
 
-    uploaded_image = st.file_uploader("Choose an image....", type=['jpg', 'jpeg', 'png'])
-    if uploaded_image is not None:
-        yolov7_weights_path = "./runs/train/yolov7-custom8/weights/best.pt"
-        segmentation_weights_path = "./sam_weight/sam_vit_h_4b8939.pth"
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # Apply the segmentation mask to the original ROI
+    segmented_roi = Image.composite(input_image, Image.new('RGB', input_image.size), segmentation_mask)
 
-        yolov7_model = load_model(yolov7_weights_path, device=device)
-        segmentation_model = load_segmentation_model(segmentation_weights_path, device=device)
+    # Alternatively, you can overlay the segmentation result directly on the original image
+    # segmented_image = Image.composite(input_image, segmented_roi, segmentation_mask)
 
-        original_image, detected_region = inference_and_save_image(uploaded_image, yolov7_model, segmentation_model, device=device)
-
-        st.image([original_image, detected_region], caption=['Original Image', 'Detected and Segmented Region'], width=300)
-
-if __name__ == '__main__':
-    main()
+    # Return the segmented ROI or segmented image based on your preference
+    return segmented_roi
