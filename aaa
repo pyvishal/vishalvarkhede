@@ -1,33 +1,15 @@
-def perform_segmentation(segment_model, input_image, bounding_box):
-    # Extract bounding box coordinates
-    x_min, y_min, x_max, y_max = bounding_box
+def load_segmentation_model(weights_folder_path, device='cuda'):
+    # Assuming the model weights are saved as 'segmentation_model.pth' in the specified folder
+    weights_path = Path(weights_folder_path) / 'segmentation_model.pth'
 
-    # Crop the region of interest (ROI) from the input image based on the bounding box
-    roi = input_image.crop((x_min, y_min, x_max, y_max))
+    if not weights_path.exists():
+        raise FileNotFoundError(f"Segmentation model weights not found at: {weights_path}")
 
-    # Perform any necessary pre-processing on the ROI
-    # For example, you may need to resize or normalize the image before feeding it to the segmentation model
-    # Apply transforms as needed based on the requirements of your segmentation model
-    transform = transforms.Compose([
-        transforms.Resize((desired_height, desired_width)),  # Replace with your desired dimensions
-        transforms.ToTensor(),
-        # Add more transforms if needed
-    ])
+    # Replace with your actual implementation for loading the segmentation model
+    # Example: Loading a segmentation model from a checkpoint
+    segmentation_model = torch.load(weights_path, map_location=device)
+    segmentation_model = segmentation_model.to(device).eval()
+    return segmentation_model
 
-    input_roi = transform(roi).unsqueeze(0).to(device)  # Assuming 'device' is defined in your code
-
-    # Perform segmentation on the cropped and pre-processed ROI
-    with torch.no_grad():
-        segmentation_result = segment_model(input_roi)[0]
-
-    # Assuming segmentation_result is a binary mask, you may convert it to a PIL Image for visualization
-    segmentation_mask = ToPILImage()(segmentation_result.cpu())
-
-    # Apply the segmentation mask to the original ROI
-    segmented_roi = Image.composite(input_image, Image.new('RGB', input_image.size), segmentation_mask)
-
-    # Alternatively, you can overlay the segmentation result directly on the original image
-    # segmented_image = Image.composite(input_image, segmented_roi, segmentation_mask)
-
-    # Return the segmented ROI or segmented image based on your preference
-    return segmented_roi
+segment_weights_folder_path = "./path/to/your/segmentation/model/folder"
+segment_model = load_segmentation_model(segment_weights_folder_path, device=device)
