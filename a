@@ -27,4 +27,3 @@ if len(objects[0]) > 0:
             cv2.destroyAllWindows()
         else:
             print("Bounding box does not contain enough coordinates")
-
