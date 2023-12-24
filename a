@@ -17,12 +17,15 @@ if len(objects[0]) > 0:
         if len(boxes) >= 4:
             x1, y1, x2, y2 = boxes[:4].astype(int)
             print(f"Bounding box coordinates: x1={x1}, y1={y1}, x2={x2}, y2={y2}")
-            
-            # Draw rectangle directly on the original image_array
-            cv2.rectangle(image_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            
+
+            # Create a copy with cv2.cvtColor to ensure compatibility
+            image_with_rectangle = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+
+            # Draw rectangle on the copy of the image_array
+            cv2.rectangle(image_with_rectangle, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
             # Display the image with bounding box
-            cv2.imshow("Image with Bounding Box", image_array)
+            cv2.imshow("Image with Bounding Box", image_with_rectangle)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         else:
