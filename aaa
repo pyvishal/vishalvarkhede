@@ -5,7 +5,7 @@ import numpy as np
 # ... (previous code)
 
 # Assuming image_tensor is the original image array, not a PyTorch tensor
-image_array = image_tensor.squeeze(0).cpu().numpy().copy()
+image_array = image_tensor.squeeze(0).cpu().numpy()
 
 # Assuming only one bounding box is present
 if len(objects[0]) > 0:
@@ -18,13 +18,13 @@ if len(objects[0]) > 0:
             x1, y1, x2, y2 = boxes[:4].astype(int)
             print(f"Bounding box coordinates: x1={x1}, y1={y1}, x2={x2}, y2={y2}")
             
-            # Create a copy of the image_array before drawing the rectangle
-            image_with_rectangle = image_array.copy()
-            cv2.rectangle(image_with_rectangle, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            # Draw rectangle directly on the original image_array
+            cv2.rectangle(image_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
             # Display the image with bounding box
-            cv2.imshow("Image with Bounding Box", image_with_rectangle)
+            cv2.imshow("Image with Bounding Box", image_array)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         else:
             print("Bounding box does not contain enough coordinates")
+
