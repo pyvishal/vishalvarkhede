@@ -1,0 +1,66 @@
+import pandas as pd
+import random
+from datetime import datetime, timedelta
+
+def generate_data():
+    data = []
+    for _ in range(30):
+        date_of_joining = random_date(2013, 2018).strftime("%d/%m/%Y")
+
+        days_worked = random.randint(365, 1825)  # 1 to 5 years
+
+        date_of_leaving = (datetime.strptime(date_of_joining, "%d/%m/%Y") + timedelta(days=days_worked)).strftime("%d/%m/%Y")
+
+        dest_on_leaving = random.choice(["Surgeon", "Dentist","Anaesthesiologist","Nurse","Physician assistant","Cardiac Specialist"])
+
+        dest_org_on_leaving = f"{random_hospital_name()}, {random.choice(['England', 'Wales'])}"
+
+        dest_trust_code_on_leaving = random_trust_code()
+
+        exit_interview_quest = random.choice(["I have been able to make suggestions to improve the work of my team / department","I have been able to make improvements happen in my area of work","I often/always looked forward to going to work","I was often/always enthusiastic about my job","I was often/always enthusiastic about my job ","Time often/always passed quickly when I was working","Does your organisation take positive action on health and well-being?"," Does your organisation act fairly with regard to career progression/promotion?","Does your organisation provide opportunities for flexible working patterns","What is your reason for leaving?","Is there anything that would have made you stay in your current role or organisation?","I felt my contribution was valued by my manager/team/organisation?","What sector will you be joining in your new role?"])
+
+        flow_month_of_leaving = random.randint(1, 12)
+
+        reason_for_leaving = random.choice(["Better opportunity", "Relocation", "Personal reasons"])
+
+        Response = random.choice(["Strongly Agree","Agree","Neither Agree","Disagree","Strongly Disagree"])
+
+        recruitment_org = "Recruitment Organization"
+
+        recruitment_trust_code = random_trust_code()
+
+        source_of_recruitment = random.choice(["Online job portal", "Referral", "Recruitment agency"])
+
+        job_type = random.choice(["Full Time", "Contractual"])
+
+        row = [date_of_joining, date_of_leaving, dest_on_leaving, dest_org_on_leaving,
+               dest_trust_code_on_leaving, exit_interview_quest,Response, flow_month_of_leaving,
+               reason_for_leaving, recruitment_org, recruitment_trust_code, source_of_recruitment,job_type]
+
+        data.append(row)
+
+    columns = ["Date Of Joining Org", "Date Of Leaving Org", "Dest On Leaving",
+               "Dest Org On Leaving", "Dest Trust Code On Leaving",
+               "Exit Interview Questions","Exit Interview Questions Response", "Flow Month Of Leaving", "Reason For Leaving",
+               "Recruitment Org", "Recruitment Trust Code", "Source Of Recruitment","Job Type"]
+
+    return pd.DataFrame(data, columns=columns)
+
+def random_date(start_year, end_year):
+
+    start_date = datetime(start_year, 1, 1)
+    end_date = datetime(end_year, 12, 31)
+
+    return start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
+
+def random_hospital_name():
+
+    return f"{random.choice(['St.', 'Royal', 'City', 'General'])} Hospital"
+
+def random_trust_code():
+    
+    return f"TR{random.randint(1000, 9999)}"
+
+
+generated_dataframe = generate_data()
+generated_dataframe.display()
