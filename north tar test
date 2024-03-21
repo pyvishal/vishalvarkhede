@@ -1,0 +1,273 @@
+def generate_data():
+
+    data = []
+    exit_interview_questions = [
+        "I have been able to make suggestions to improve the work of my team / department",
+        "I have been able to make improvements happen in my area of work",
+        "I often/always looked forward to going to work",
+        "I was often/always enthusiastic about my job",
+        "Time often/always passed quickly when I was working",
+        "Does your organisation take positive action on health and well-being?",
+        "Does your organisation act fairly with regard to career progression/promotion?",
+        "Does your organisation provide opportunities for flexible working patterns?",
+        # "What is your reason for leaving?",
+        "I felt my contribution was valued by my manager/team/organisation?",
+        # "What sector will you be joining in your new role?",
+        "How satisfied are you with your overall experience at the organization?",
+        "Is there anything that would have made you stay in your current role or organisation?"
+    ]
+
+    stay_reasons = [
+        
+        "I felt a strong work-life balance was crucial for my well-being, and unfortunately, the current structure wasn't ideal.",
+
+        "My career aspirations perfectly aligned with the organization's vision, but personal circumstances necessitated a change.",
+
+        "The mentorship I received here was invaluable, and I'd love to return with more experience under my belt.",
+
+        "I have immense respect for my senior colleagues, and their guidance has been instrumental in my growth. However, I must pursue a Master's degree, leading to my departure.",
+
+        "This organization truly fostered a positive work environment, and I would have loved to stay if not for personal obligations.",
+
+        "The opportunities for professional growth here were exceptional, but unfortunately, the compensation package didn't meet my current needs.",
+
+        "While I'm leaving for personal reasons, I would love to return in the future and contribute once again.",
+
+        "Current package offered inadequate compensation that failed to reflect my experience and skillset, creating significant financial strain.",
+
+        "My role provided a solid foundation for my skills, and I was now looking to broaden my experience.",
+
+        "The poor work-life balance significantly impacted my overall well-being.",
+
+        "My achievements were consistently overlooked and ignored, leading to a deep sense of discouragement.",
+
+        "I lacked the support and collaboration I needed from my team to thrive.",
+
+        "Communication gaps within the organization created a frustrating work environment.",
+
+        "My ideas and out-of-the-box thinking were not valued! This stifled my contribution significantly.",
+
+        "Lack of focus on mental health made the workplace emotionally draining, and employees felt unsupported and undervalued.",
+
+        "Work culture created a constant sense of dissonance with my values, leaving me feeling disillusioned and frustrated.",
+
+        "My personal career goals conflicted with the current leadership vision.",
+
+        "Lack of opportunities to learn new skills left me feeling stuck in a dead-end position, with no chance to advance my career.",
+
+        "Lack of transparency & unclear goals.",
+
+        "Being repeatedly ignored and disrespected when I offered valuable feedback was incredibly disheartening and demotivating.",
+
+        "Constant sense of frustration due to, there was a misalignment between my personal values and the organization's culture.",
+
+        "Due to unforeseen personal circumstances, I had to make the difficult decision to leave.",
+
+        "I'm taking a well-deserved career break to focus on personal endeavors.",
+    ]
+
+    start_id = 1000001
+    num_employees_no_interview = 4 
+
+    for _ in range(136):
+        date_of_joining = random_date(2013, 2018).strftime("%d/%m/%Y")
+        days_worked = random.randint(365, 1825)
+        date_of_leaving = (datetime.strptime(date_of_joining, "%d/%m/%Y") + timedelta(days=days_worked)).strftime("%d/%m/%Y")
+        dest_on_leaving = random.choice(["Surgeon", "Dentist", "Anaesthesiologist", "Nurse", "Physician assistant", "Cardiac Specialist"])
+        dest_org_on_leaving = f"{random.choice(['St.', 'Royal', 'City', 'General'])} Hospital, {random.choice(['England', 'Wales'])}"
+        dest_trust_code_on_leaving = random_trust_code()
+
+        exit_interview_responses = [
+            random.choice(["Strongly Agree", "Agree", "Neither Agree", "Disagree", "Strongly Disagree"]) for _ in range(10)
+        ] + [random.choice(stay_reasons)]
+
+        flow_month_of_leaving = random.randint(1, 12)
+        reason_for_leaving = random.choice(["Better opportunity", "Relocation", "Personal reasons"])
+        recruitment_org = "Recruitment Organization"
+        recruitment_trust_code = random_trust_code()
+        source_of_recruitment = random.choice(["Online job portal", "Referral", "Recruitment agency","Indeed","Company","TotalJobs","LinkedIn"])
+        job_type = random.choice(["Full Time", "Part Time"])
+        name_of_employee = random_name()
+        employee_id = start_id
+
+        OrganizationType = random.choice(["Theatre Support Worker","Senior Doctor","Nurse Practitioner",
+                                          "Newly Qualified Nurse","Junior Doctor","Emergency Care Assistant","Chief Nurse"])
+
+        Transfer_Types = random.choice(["Inter-Trust Transfers","Departmental Transfers","Intra-Trust Transfers"])
+
+        TypeOfAppointment = random.choice(["Full-Time","Part-Time"])
+
+        Country = random.choice(["Wales","England"])
+
+        County = random.choice(["Cardiff","London","Newport","Berkshire"])
+
+        Town   = random.choice(["Slough","Canton","Greenwich","Paddington","Began","Milton","Windsor"])
+
+        Target_Location = random.choice(["North East & Yorkshire","North West","South East","London","East of England","South West","Midlands"])
+
+        Gender = random.choice(["Female","Others","Male"])
+
+        healthcare_sectors =["Surgeon","Dentist","Anaesthesiologist","Nurse","Physician assistant","Cardiac Specialist"]
+        sector_in_new_role = random.choice(healthcare_sectors)
+
+        ExitInterviewCompleted = "Yes" if _ >= num_employees_no_interview else "No"
+
+        #ExitInterviewCompleted = random.choice(["Yes","No"])
+
+        manager_id = random.randint(1000201, 1000204)
+        tenure = random.randint(1, 5)
+        total_leaves = random.randint(0, 30)
+        balance_leaves = random.randint(0, total_leaves)
+        contracted_hrs_per_week = random.randint(40, 48)
+        completed_hrs_per_week = random.randint(30, 50)
+        dob = random_date(1960, 2000).strftime("%d/%m/%Y")
+
+        row = [employee_id, name_of_employee, Gender, Country, County, Town,TypeOfAppointment,
+               date_of_joining, Transfer_Types,Target_Location, date_of_leaving, dest_on_leaving,
+               dest_org_on_leaving, dest_trust_code_on_leaving, flow_month_of_leaving,
+               recruitment_org, recruitment_trust_code, source_of_recruitment, job_type, ExitInterviewCompleted,tenure,manager_id, total_leaves, balance_leaves, contracted_hrs_per_week, completed_hrs_per_week, dob,reason_for_leaving,sector_in_new_role] + exit_interview_responses
+
+        data.append(row)
+        start_id += 1
+
+    columns = ["Emp_ID", "Emp_Name", "Gender", "Country", "County", "Current_Town","TypeOfAppointment",
+               "Date_Of_Joining Org", "Transfer_Types","Target_Location", "Date_Of_Leaving Org", "Dest_On Leaving",
+               "Dest_Org_On_Leaving", "Dest_Trust_Code_On_Leaving", "Flow_Month_Of_Leaving",
+               "Recruitment_Org", "Recruitment_Trust_Code", "Source_Of_Recruitment", "Job_Type", "ExitInterview_Completed","Tenure",
+               "Manager_ID", "Total_Leaves", "Balance_Leaves", "Contracted_Hrs_Per_Week", "Completed_Hrs_Per_Week", "DOB", "Reason For Leaving","What sector will you be joining in your new role?"] + exit_interview_questions
+
+    return pd.DataFrame(data, columns=columns)
+
+
+def random_date(start_year, end_year):
+    start_date = datetime(start_year, 1, 1)
+    end_date = datetime(end_year, 12, 31)
+    return start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
+
+
+def random_hospital_name():
+    return f"{random.choice(['St.', 'Royal', 'City', 'General'])} Hospital"
+
+
+def random_trust_code():
+    return f"TR{random.randint(1000, 9999)}"
+
+
+def random_name():
+    first_names = ["John", "Jane", "Michael", "Emily", "David", "Emma", "Christopher", "Olivia"]
+    last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
+    return f"{random.choice(first_names)} {random.choice(last_names)}"
+
+# def process_exit_interview_responses(row):
+#     # Replace responses with "NA" if ExitInterviewCompleted is "No"
+#     return ["NA" if row["ExitInterviewCompleted"] == "No" else response for response in row[24:]]
+
+
+
+
+
+try: 
+    
+    generated_data = generate_data()
+    generated_dataframe = spark.createDataFrame(generated_data)
+    # generated_dataframe.display()
+
+    columns_to_replace = ['I have been able to make suggestions to improve the work of my team / department',
+    'I have been able to make improvements happen in my area of work',
+    'I often/always looked forward to going to work',
+    'I was often/always enthusiastic about my job',
+    'Time often/always passed quickly when I was working',
+    'Does your organisation take positive action on health and well-being?',
+    'Does your organisation act fairly with regard to career progression/promotion?',
+    'Does your organisation provide opportunities for flexible working patterns?',
+    'I felt my contribution was valued by my manager/team/organisation?',
+    'How satisfied are you with your overall experience at the organization?',
+    'Is there anything that would have made you stay in your current role or organisation?']
+
+    for column_name in columns_to_replace:
+        generated_dataframe = generated_dataframe.withColumn(
+            column_name,
+            when(col("ExitInterview_Completed") == "No", "NA").otherwise(col(column_name))
+        )
+
+    #New changes
+
+    generated_dataframe = (generated_dataframe
+                                .withColumn(
+                                    "What sector will you be joining in your new role?",
+                                     when(col("ExitInterview_Completed") == "No", "NA")
+                                    .otherwise(col("What sector will you be joining in your new role?"))
+                                          )
+                          ) 
+
+    generated_dataframe = (generated_dataframe
+                            .withColumn("Affected_Sector_After_Emp_Leaving",
+                            when(col("ExitInterview_Completed") == "No", col("Dest_On Leaving"))
+                            .otherwise(col("What sector will you be joining in your new role?"))
+                                       )
+                          )
+
+    # Below code for sector affected by employee leaving the org:
+
+    generated_dataframe = (generated_dataframe
+                           .withColumn("Affected_Sector_After_Emp_Leaving",
+                            F.expr("CASE WHEN ExitInterview_Completed = 'Yes' THEN `What sector will you be joining in your new role?` ELSE 'Not Applicable' END")
+                          ))
+    
+    # Below code calculates the quarter based on the month of leaving and adds a new column called "Quarter_Trend" to the DataFrame.
+
+    generated_dataframe = (generated_dataframe
+                           .withColumn("Quarterly_Trend",
+                                        F.expr("CASE WHEN Flow_Month_Of_Leaving BETWEEN 1 AND 3 THEN 'Q1' " +
+                                            "WHEN Flow_Month_Of_Leaving BETWEEN 4 AND 6 THEN 'Q2' " +
+                                            "WHEN Flow_Month_Of_Leaving BETWEEN 7 AND 9 THEN 'Q3' " +
+                                            "ELSE 'Q4' END")
+                                      )
+                          )
+    
+    # 1. Drop "Target_Location" and rename "Country", "County", and "Town"
+    #    Add a new field called "Target_Town" based on the existing "Town"
+    generated_dataframe = (generated_dataframe.withColumnRenamed("Country", "Current_Country")
+        .withColumnRenamed("County", "Current_County")
+        .withColumn("Target_Town", generated_dataframe["Current_Town"])
+        )
+
+    # 2. Rename and update hours fields
+    generated_dataframe = generated_dataframe.withColumnRenamed("Contracted_Hrs_Per_Week", "Contracted_Hrs_YTD") \
+        .withColumnRenamed("Completed_Hrs_Per_Week", "Completed_Hrs_YTD") \
+        .withColumn("Contracted_Hrs_YTD", F.lit(random.randint(1800, 2000))) \
+        .withColumn("Completed_Hrs_YTD", F.when(F.col("ExitInterview_Completed") == "Yes",
+                                            F.rand()*10 + F.col("Contracted_Hrs_YTD")).otherwise(F.lit(0)))
+
+    # 3. Modify the code to ensure employee exits occur in some quarters of 2022 and 2023
+    generated_dataframe = generated_dataframe.withColumn("Flow_Month_Of_Leaving",
+                                                        F.when(F.col("Flow_Month_Of_Leaving") > 12,
+                                                                F.col("Flow_Month_Of_Leaving") - 12)
+                                                        .otherwise(F.col("Flow_Month_Of_Leaving")))
+
+    generated_dataframe = generated_dataframe.withColumn("Date_Of_Leaving Org",
+                                                    F.date_sub(F.lit("2023-01-01"),
+                                                               F.expr("CAST(((12 - Flow_Month_Of_Leaving) % 12) * 30 AS INT)")))
+
+
+
+    # selecting columns as per my convnience
+   
+
+    generated_dataframe = generated_dataframe.select(['Emp_ID','Emp_Name','Gender','Current_Country','Current_County','Current_Town','TypeOfAppointment','Date_Of_Joining Org','Transfer_Types','Target_Location','Date_Of_Leaving Org','Dest_On Leaving','Dest_Org_On_Leaving','Dest_Trust_Code_On_Leaving','Flow_Month_Of_Leaving','Recruitment_Org','Recruitment_Trust_Code','Source_Of_Recruitment','Job_Type','ExitInterview_Completed','Tenure','Manager_ID',
+    'Total_Leaves','Balance_Leaves','Contracted_Hrs_YTD','Completed_Hrs_YTD','DOB','Reason For Leaving','Quarterly_Trend',
+    'Affected_Sector_After_Emp_Leaving','What sector will you be joining in your new role?','I have been able to make suggestions to improve the work of my team / department','I have been able to make improvements happen in my area of work','I often/always looked forward to going to work','I was often/always enthusiastic about my job','Time often/always passed quickly when I was working','Does your organisation take positive action on health and well-being?','Does your organisation act fairly with regard to career progression/promotion?','Does your organisation provide opportunities for flexible working patterns?','I felt my contribution was valued by my manager/team/organisation?',
+    'How satisfied are you with your overall experience at the organization?','Is there anything that would have made you stay in your current role or organisation?']).drop("Target_Location")
+
+    
+    
+    generated_dataframe.display()
+
+    
+
+
+    status = "Success"
+except Exception as e:
+  
+    print(e)
+    status = "Fail"
