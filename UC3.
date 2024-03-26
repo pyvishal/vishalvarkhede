@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import year, expr
+from pyspark.sql.functions import approxQuantile, year
 
 # Create SparkSession
 spark = SparkSession.builder \
@@ -12,15 +12,11 @@ spark = SparkSession.builder \
 trust_df = trust_df.withColumn("Year", year("Period"))
 
 # Group by Year and calculate median Type1_Departments_Major_A&E value
-median_expr = expr("approxQuantile(Type1_Departments_Major_A&E, array(0.5), 10000)[0]")
-trend_analysis_df = trust_df.groupBy("Year") \
-    .agg(median_expr.alias("Median_Type1_Departments_Major_A&E"))
+quantiles = trust_df.groupby("Year")\
+                    .agg(approxQuantile("Type1_Departments_Major_A&E", [0.5], 0.0).alias("Median_Type1_Dept_Major_A&E_attd"))
 
 # Show the trend analysis
-trend_analysis_df.orderBy("Year").show()
-
-# Stop SparkSession
-spark.stop()
+quantiles.orderBy("Year").show()
 
 
 
