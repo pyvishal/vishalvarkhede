@@ -1,9 +1,9 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import year, avg
+from pyspark.sql.functions import year, expr
 
 # Create SparkSession
 spark = SparkSession.builder \
-    .appName("Yearly Trend Analysis") \
+    .appName("Yearly Trend Analysis - Median") \
     .getOrCreate()
 
 # Assuming trust_df is already created with the data
@@ -11,15 +11,16 @@ spark = SparkSession.builder \
 # Extract year from Period column
 trust_df = trust_df.withColumn("Year", year("Period"))
 
-# Group by Year and calculate average Type1_Departments_Major_A&E value
+# Group by Year and calculate median Type1_Departments_Major_A&E value
 trend_analysis_df = trust_df.groupBy("Year") \
-    .agg(avg("Type1_Departments_Major_A&E").alias("Avg_Type1_Departments_Major_A&E"))
+    .agg(expr("percentile_approx(Type1_Departments_Major_A&E, 0.5)").alias("Median_Type1_Departments_Major_A&E"))
 
 # Show the trend analysis
 trend_analysis_df.orderBy("Year").show()
 
 # Stop SparkSession
 spark.stop()
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
