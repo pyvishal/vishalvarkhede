@@ -9,6 +9,7 @@ spark = SparkSession.builder \
     .appName("Trust Data Creation") \
     .getOrCreate()
 
+    
 # List of Trust Names
 trust_names = [
     "Royal Devon And Exeter NHS Foundation Trust",
@@ -17,7 +18,100 @@ trust_names = [
     "Hull Teaching PCT",
     "Chesterfield Royal Hospital NHS Foundation Trust",
     "Assura Vertis Urgent Care Centres (Birmingham)",
-    # Add remaining trust names here...
+    "Epsom And St Helier University Hospitals NHS Trust",
+    "Norwich Practices Ltd (Castle Mall)",
+    "Peterborough PCT",
+    "Malling Health - Telford Wic",
+    "Staffordshire Doctors Urgent Care Ltd [Sduc]",
+    "Northern Lincolnshire And Goole NHS Foundation Trust",
+    "Isle Of Wight NHS Primary Care Trust",
+    "Birmingham Community Healthcare NHS Trust",
+    "Darlington PCT",
+    "York Teaching Hospital NHS Foundation Trust",
+    "Wye Valley NHS Trust",
+    "Oldham PCT Walk In Centre",
+    "Assura Reading Llp",
+    "Workington Health Limited",
+    "Hertfordshire PCT",
+    "North Tees And Hartlepool NHS Foundation Trust",
+    "Birmingham Children'S Hospital NHS Foundation Trust",
+    "Urgent Care Centre",
+    "Hornsea Cottage Hospital",
+    "Sirona Care & Health",
+    "Milton Keynes University Hospital NHS Foundation Trust",
+    "Bracknell Urgent Care Centre Wic",
+    "Ealing Hospital NHS Trust",
+    "Ealing Mini UCC",
+    "James Paget University Hospitals NHS Foundation Trust",
+    "Shropshire County PCT",
+    "The Royal Wolverhampton NHS Trust",
+    "Oldham PCT",
+    "South Staffordshire PCT",
+    "Plymouth Community Healthcare (Cic)",
+    "Gloucestershire Care Services NHS Trust",
+    "Carfax Health Enterprise",
+    "Mid Cheshire Hospitals NHS Foundation Trust",
+    "Ashton, Leigh & Wigan Community Healthcare NHS Trust",
+    "South Gloucestershire PCT",
+    "Suffolk PCT",
+    "Bedfordshire Primary Care Trust",
+    "Leicester City Primary Care Trust",
+    "North Middlesex University Hospital NHS Trust",
+    "Berkshire East PCT",
+    "Corby Urgent Care Centre",
+    "Central Lancashire Primary Care Trust",
+    "Derbyshire Health United Ltd (North High Peak Urgent Care Centre)",
+    "Manchester Primary Care Trust",
+    "Northamptonshire Primary Care Trust",
+    "Westminster PCT",
+    "Hull And East Yorkshire Hospitals NHS Trust",
+    "Salisbury NHS Foundation Trust",
+    "North Somerset Community Partnership Community Interest Company",
+    "The Junction Hc - Unregistered Patients",
+    "Peterborough Primary Care Trust",
+    "Royal Surrey County Hospital NHS Foundation Trust",
+    "Broad Street Medical Practice & Walk In Centre",
+    "Aintree University Hospitals NHS Foundation Trust",
+    "Crown Health Centre",
+    "Newcastle Primary Care Trust",
+    "Sheffield City GP Hc (Wic)",
+    "Dr GP Hanlon's Practice",
+    "Croydon Health Services NHS Trust",
+    "Liverpool Women'S NHS Foundation Trust",
+    "Newham University Hospital NHS Trust",
+    "Shropshire County Primary Care Trust",
+    "Sheffield City Gp Hc (WiC)",
+    "South West Essex PCT",
+    "Withernsea Hospital",
+    "Kent Community Health NHS Trust",
+    "Lakeside Plus Limited",
+    "Exmouth Minor Injury Unit",
+    "Harold Wood Walk In Centre",
+    "The Royal Wolverhampton Hospitals NHS Trust",
+    "Kensington And Chelsea PCT",
+    "Fryatt Hospital",
+    "Greet General Practice & Urgent Care Centre",
+    "Sunderland Teaching PCT",
+    "Lindley House Health Centre",
+    "London North West University Healthcare NHS Trust",
+    "Robert Jones And Agnes Hunt Orthopaedic And District Hospital NHS Trust",
+    "Rotherham Community Health Centre",
+    "University Hospitals Of Morecambe Bay NHS Trust",
+    "West Middlesex University Hospital NHS Trust",
+    "Hurley Grp Practice",
+    "Wolverhampton City PCT",
+    "Birmingham Children's Hospital NHS Foundation Trust",
+    "Bolton NHS Foundation Trust",
+    "Nottingham City Primary Care Trust",
+    "Mid and South Essex NHS Foundation Trust",
+    "Basildon And Thurrock University Hospitals NHS Foundation Trust",
+    "Cheshire And Wirral Partnership NHS Foundation Trust",
+    "Great Yarmouth And Waveney Primary Care Trust",
+    "Nottinghamshire Healthcare NHS Trust",
+    "Dr Jm Ribchester & Partners",
+    "Weybridge Walk In Centre",
+    "Kings Park Surgery",
+    "University Hospitals Bristol And Weston NHS Foundation Trust"
 ]
 
 # Ensure unique Trust Names
@@ -42,10 +136,7 @@ trust_df = trust_df.withColumn("Period", expr(f"date_add(to_date('{start_date}')
 trust_df = trust_df.withColumn("Emergency_Admission_Via_Type1_A&E_in_4_hrs", expr(f"int(rand() * (10000 - 1000) + 1000)"))
 
 # Select 200 random records
-trust_df = trust_df.orderBy(rand()).limit(200)
-
-# Show DataFrame
-trust_df.show(truncate=False)
-
-# Stop SparkSession
-spark.stop()
+trust_df = trust_df.orderBy(rand()).limit(1000)
+trust_df = trust_df.select("Trust_Code","Trust_Name","Period","Type1_Departments_Major_A&E",
+"Emergency_Admission_Via_Type1_A&E_in_4_hrs")
+trust_df.display()
