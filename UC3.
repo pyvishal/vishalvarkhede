@@ -1,11 +1,79 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
+
+# Create SparkSession
+spark = SparkSession.builder \
+    .appName("NHS England A&E Activity") \
+    .getOrCreate()
+
+# Define schema for the data
+schema = StructType([
+    StructField("Code", StringType(), True),
+    StructField("Period", StringType(), True),
+    StructField("Type_1_Major_A&E", IntegerType(), True),
+    StructField("Type_2_Single_Specialty", IntegerType(), True),
+    StructField("Type_3_Other_A&E", IntegerType(), True),
+    StructField("Total_Attendances", IntegerType(), True),
+    StructField("Type_1_Major_A&E_4hrs", IntegerType(), True),
+    StructField("Type_2_Single_Specialty_4hrs", IntegerType(), True),
+    StructField("Type_3_Other_A&E_4hrs", IntegerType(), True),
+    StructField("Total_Attendances_4hrs", IntegerType(), True),
+    StructField("Percentage_in_4hrs_type_1", FloatType(), True),
+    StructField("Percentage_in_4hrs_all", FloatType(), True),
+    StructField("Emergency_Admissions_Type_1_A&E", IntegerType(), True),
+    StructField("Emergency_Admissions_Type_2_A&E", IntegerType(), True),
+    StructField("Emergency_Admissions_Type_3_and_4_A&E", IntegerType(), True),
+    StructField("Total_Emergency_Admissions_via_A&E", IntegerType(), True),
+    StructField("Other_Emergency_Admissions", IntegerType(), True),
+    StructField("Total_Emergency_Admissions", IntegerType(), True),
+    StructField("Patients_spending_gt4hrs_decision_to_admit", IntegerType(), True),
+    StructField("Patients_spending_gt12hrs_decision_to_admit", IntegerType(), True)
+])
+
+# Generate data for the columns
+data = [
+    ("Code1", "2023-01", 100, 150, 200, 450, 20, 30, 40, 90, 80.0, 85.0, 50, 70, 30, 150, 50, 200, 10, 5),
+    ("Code2", "2023-02", 120, 160, 220, 500, 25, 35, 45, 105, 85.0, 90.0, 60, 80, 40, 180, 60, 240, 15, 8),
+    # Add more data here if needed
+]
+
+# Create DataFrame
+df = spark.createDataFrame(data, schema)
+
+# Show DataFrame
+df.show()
+
+# Generate 10 employees data using the columns
+employees_data = []
+for _ in range(10):
+    employee_data = (
+        "Employee_Code",  # Code
+        "2023-03",  # Period
+        90,  # Type_1_Major_A&E
+        130,  # Type_2_Single_Specialty
+        180,  # Type_3_Other_A&E
+        400,  # Total_Attendances
+        15,  # Type_1_Major_A&E_4hrs
+        25,  # Type_2_Single_Specialty_4hrs
+        35,  # Type_3_Other_A&E_4hrs
+        75,  # Total_Attendances_4hrs
+        70.0,  # Percentage_in_4hrs_type_1
+        75.0,  # Percentage_in_4hrs_all
+        40,  # Emergency_Admissions_Type_1_A&E
+        60,  # Emergency_Admissions_Type_2_A&E
+        30,  # Emergency_Admissions_Type_3_and_4_A&E
+        130,  # Total_Emergency_Admissions_via_A&E
+        40,  # Other_Emergency_Admissions
+        170,  # Total_Emergency_Admissions
+        8,  # Patients_spending_gt4hrs_decision_to_admit
+        4  # Patients_spending_gt12hrs_decision_to_admit
+    )
+    employees_data.append(employee_data)
+
+# Create DataFrame for employees
+employees_df = spark.createDataFrame(employees_data, schema)
+
+# Show employees DataFrame
+employees_df.show()
 																						
-		Title:	A&E Activity and Emergency Admissions statistics, NHS and independent sector organisations in England																			
-																						
-		Summary:	A&E performance and emergency activity timeseries, year to date from first publication																			
-																																						
-																						
-		England Level Data																				
-				A&E attendances				A&E attendances > 4 hours from arrival to admission, transfer or discharge						Emergency Admissions								
-		Code	Period	Type 1 Departments - Major A&E	Type 2 Departments - Single Specialty	Type 3 Departments - Other A&E/Minor Injury Unit	Total Attendances	Type 1 Departments - Major A&E	Type 2 Departments - Single Specialty	Type 3 Departments - Other A&E/Minor Injury Unit	Total Attendances > 4 hours	Percentage in 4 hours or less (type 1)	Percentage in 4 hours or less (all)	Emergency Admissions via Type 1 A&E	Emergency Admissions via Type 2 A&E	Emergency Admissions via Type 3 and 4 A&E	Total Emergency Admissions via A&E	Other Emergency Admissions (i.e not via A&E)	Total Emergency Admissions	Number of patients spending >4 hours from decision to admit to admission	Number of patients spending >12 hours from decision to admit to admission	
-		-	
 		
