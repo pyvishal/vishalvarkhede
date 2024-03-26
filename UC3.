@@ -6,74 +6,203 @@ spark = SparkSession.builder \
     .appName("NHS England A&E Activity") \
     .getOrCreate()
 
-# Define schema for the data
-schema = StructType([
-    StructField("Code", StringType(), True),
-    StructField("Period", StringType(), True),
-    StructField("Type_1_Major_A&E", IntegerType(), True),
-    StructField("Type_2_Single_Specialty", IntegerType(), True),
-    StructField("Type_3_Other_A&E", IntegerType(), True),
-    StructField("Total_Attendances", IntegerType(), True),
-    StructField("Type_1_Major_A&E_4hrs", IntegerType(), True),
-    StructField("Type_2_Single_Specialty_4hrs", IntegerType(), True),
-    StructField("Type_3_Other_A&E_4hrs", IntegerType(), True),
-    StructField("Total_Attendances_4hrs", IntegerType(), True),
-    StructField("Percentage_in_4hrs_type_1", FloatType(), True),
-    StructField("Percentage_in_4hrs_all", FloatType(), True),
-    StructField("Emergency_Admissions_Type_1_A&E", IntegerType(), True),
-    StructField("Emergency_Admissions_Type_2_A&E", IntegerType(), True),
-    StructField("Emergency_Admissions_Type_3_and_4_A&E", IntegerType(), True),
-    StructField("Total_Emergency_Admissions_via_A&E", IntegerType(), True),
-    StructField("Other_Emergency_Admissions", IntegerType(), True),
-    StructField("Total_Emergency_Admissions", IntegerType(), True),
-    StructField("Patients_spending_gt4hrs_decision_to_admit", IntegerType(), True),
-    StructField("Patients_spending_gt12hrs_decision_to_admit", IntegerType(), True)
-])
-
-# Generate data for the columns
-data = [
-    ("Code1", "2023-01", 100, 150, 200, 450, 20, 30, 40, 90, 80.0, 85.0, 50, 70, 30, 150, 50, 200, 10, 5),
-    ("Code2", "2023-02", 120, 160, 220, 500, 25, 35, 45, 105, 85.0, 90.0, 60, 80, 40, 180, 60, 240, 15, 8),
-    # Add more data here if needed
-]
-
-# Create DataFrame
-df = spark.createDataFrame(data, schema)
-
-# Show DataFrame
-df.show()
-
-# Generate 10 employees data using the columns
-employees_data = []
-for _ in range(10):
-    employee_data = (
-        "Employee_Code",  # Code
-        "2023-03",  # Period
-        90,  # Type_1_Major_A&E
-        130,  # Type_2_Single_Specialty
-        180,  # Type_3_Other_A&E
-        400,  # Total_Attendances
-        15,  # Type_1_Major_A&E_4hrs
-        25,  # Type_2_Single_Specialty_4hrs
-        35,  # Type_3_Other_A&E_4hrs
-        75,  # Total_Attendances_4hrs
-        70.0,  # Percentage_in_4hrs_type_1
-        75.0,  # Percentage_in_4hrs_all
-        40,  # Emergency_Admissions_Type_1_A&E
-        60,  # Emergency_Admissions_Type_2_A&E
-        30,  # Emergency_Admissions_Type_3_and_4_A&E
-        130,  # Total_Emergency_Admissions_via_A&E
-        40,  # Other_Emergency_Admissions
-        170,  # Total_Emergency_Admissions
-        8,  # Patients_spending_gt4hrs_decision_to_admit
-        4  # Patients_spending_gt12hrs_decision_to_admit
-    )
-    employees_data.append(employee_data)
-
-# Create DataFrame for employees
-employees_df = spark.createDataFrame(employees_data, schema)
-
-# Show employees DataFrame
-employees_df.show()
-																						
-		
+Royal Devon And Exeter NHS Foundation Trust
+West Hertfordshire Hospitals NHS Trust
+West Lancashire Healthcare Partnership Community Cic (Sdgh)
+Hull Teaching PCT
+Chesterfield Royal Hospital NHS Foundation Trust
+Assura Vertis Urgent Care Centres (Birmingham)
+Epsom And St Helier University Hospitals NHS Trust
+Norwich Practices Ltd (Castle Mall)
+Peterborough PCT
+Malling Health - Telford Wic
+Staffordshire Doctors Urgent Care Ltd [Sduc]
+Northern Lincolnshire And Goole NHS Foundation Trust
+Isle Of Wight NHS Primary Care Trust
+Birmingham Community Healthcare NHS Trust
+Darlington PCT
+York Teaching Hospital NHS Foundation Trust
+Wye Valley NHS Trust
+Oldham PCT Walk In Centre
+Assura Reading Llp
+Workington Health Limited
+Hertfordshire PCT
+North Tees And Hartlepool NHS Foundation Trust
+Birmingham Children'S Hospital NHS Foundation Trust
+Urgent Care Centre
+Hornsea Cottage Hospital
+Sirona Care & Health
+Milton Keynes University Hospital NHS Foundation Trust
+Bracknell Urgent Care Centre Wic
+Ealing Hospital NHS Trust
+Ealing Mini UCC
+James Paget University Hospitals NHS Foundation Trust
+Shropshire County PCT
+The Royal Wolverhampton NHS Trust
+Oldham PCT
+South Staffordshire PCT
+Plymouth Community Healthcare (Cic)
+Gloucestershire Care Services NHS Trust
+Carfax Health Enterprise
+Mid Cheshire Hospitals NHS Foundation Trust
+Ashton, Leigh & Wigan Community Healthcare NHS Trust
+South Gloucestershire PCT
+Suffolk PCT
+Bedfordshire Primary Care Trust
+Leicester City Primary Care Trust
+North Middlesex University Hospital NHS Trust
+Berkshire East PCT
+Corby Urgent Care Centre
+Central Lancashire Primary Care Trust
+Derbyshire Health United Ltd (North High Peak Urgent Care Centre)
+Manchester Primary Care Trust
+Northamptonshire Primary Care Trust
+Westminster PCT
+Hull And East Yorkshire Hospitals NHS Trust
+Salisbury NHS Foundation Trust
+North Somerset Community Partnership Community Interest Company
+The Junction Hc - Unregistered Patients
+Peterborough Primary Care Trust
+Royal Surrey County Hospital NHS Foundation Trust
+Broad Street Medical Practice & Walk In Centre
+Aintree University Hospitals NHS Foundation Trust
+Crown Health Centre
+Newcastle Primary Care Trust
+Sheffield City GP Hc (Wic)
+Dr GP Hanlon's Practice
+Croydon Health Services NHS Trust
+Liverpool Women'S NHS Foundation Trust
+Newham University Hospital NHS Trust
+Shropshire County Primary Care Trust
+Sheffield City Gp Hc (WiC)
+South West Essex PCT
+Withernsea Hospital
+Kent Community Health NHS Trust
+Lakeside Plus Limited
+Exmouth Minor Injury Unit
+Harold Wood Walk In Centre
+The Royal Wolverhampton Hospitals NHS Trust
+Kensington And Chelsea PCT
+Fryatt Hospital
+Greet General Practice & Urgent Care Centre
+Sunderland Teaching PCT
+Lindley House Health Centre
+London North West University Healthcare NHS Trust
+Robert Jones And Agnes Hunt Orthopaedic And District Hospital NHS Trust
+Rotherham Community Health Centre
+University Hospitals Of Morecambe Bay NHS Trust
+West Middlesex University Hospital NHS Trust
+Hurley Grp Practice
+Wolverhampton City PCT
+Birmingham Children's Hospital NHS Foundation Trust
+Bolton NHS Foundation Trust
+Nottingham City Primary Care Trust
+Mid and South Essex NHS Foundation Trust
+Basildon And Thurrock University Hospitals NHS Foundation Trust
+Cheshire And Wirral Partnership NHS Foundation Trust
+Great Yarmouth And Waveney Primary Care Trust
+Nottinghamshire Healthcare NHS Trust
+Dr Jm Ribchester & Partners
+Weybridge Walk In Centre
+Kings Park Surgery
+University Hospitals Bristol And Weston NHS Foundation Trust
+Buckinghamshire Hospitals NHS Trust
+Havering Primary Care Trust
+Heart of Birmingham Teaching PCT
+Staffordshire And Stoke On Trent Partnership NHS Trust
+Paulton Memorial Hospital
+Badger Ltd
+University Hospitals Plymouth NHS Trust
+Kingston Hospital NHS Trust
+Northern Devon Healthcare NHS Trust
+Encompass Gp Practice 2
+Central Lancashire PCT
+Tetbury Hospital Trust Ltd
+Bromley Primary Care Trust
+University Hospitals Of Leicester NHS Trust
+Wiltshire PCT
+Wirral Community NHS Trust
+St Helens And Knowsley Hospital Services NHS Trust
+East Sussex Downs And Weald Primary Care Trust
+Parkfield (H) Minor Emergency
+Barts And The London NHS Trust
+Ipswich Hospital NHS Trust
+The Royal Bournemouth & Christchurch Hospitals NHS Foundation Trust
+Wandsworth Primary Care Trust
+Shakespeare Walk-In Centre
+Belmont Health Centre
+South Tyneside NHS Foundation Trust
+University Hospitals Bristol NHS Foundation Trust
+Hounslow Primary Care Trust
+Imperial College Healthcare NHS Trust
+Bury PCT
+Herefordshire PCT
+South Birmingham GP Walk In Centre
+Virgin Care Services Ltd
+Birmingham East And North Primary Care Trust
+Derbyshire County Primary Care Trust
+The Queen Elizabeth Hospital King'S Lynn NHS Trust
+Western Cheshire Primary Care Trust
+Kirklees PCT
+Oxford University Hospitals NHS Trust
+Manchester University NHS Foundation Trust
+Barking, Havering And Redbridge Hospitals NHS Trust
+South Birmingham Primary Care Trust
+Gp Walk In Health Centre Service
+Humber NHS Foundation Trust
+London North West Healthcare NHS Trust
+South London Healthcare NHS Trust
+Locala Community Partnerships
+Greenbrook Healthcare
+Summerfield Urgent Care Centre
+Stoke On Trent PCT
+Suffolk Community Healthcare
+Park Community Practice
+Bedfordshire PCT
+The Dudley Group NHS Foundation Trust
+Rossendale Minor Injuries Unit
+Brighton Station Health Centre
+Southampton City Primary Care Trust
+Eastern And Coastal Kent Community Health NHS Trust
+University Hospitals Birmingham NHS Foundation Trust
+Edridge Road Community Health Centre
+North Staffordshire Primary Care Trust
+The Newcastle Upon Tyne Hospitals NHS Foundation Trust
+Parkway Miu
+North Bristol NHS Trust
+Tollgate Lodge Medical Centre
+Torbay And Southern Devon Health And Care NHS Trust
+Putnoe Medical Centre Walk In Centre
+Surrey Primary Care Trust
+East Sussex Downs And Weald PCT
+Phl Lymington Utc
+Colchester Hospital University NHS Foundation Trust
+Frimley Park Hospital NHS Foundation Trust
+Sandwell And West Birmingham Hospitals NHS Trust
+Trafford Healthcare NHS Trust
+Worcestershire Acute Hospitals NHS Trust
+Sheffield PCT
+LCD-Leeds-OOH
+Sheffield Children's NHS Foundation Trust
+Market Harborough Urgent Care Centre
+Royal Berkshire NHS Foundation Trust
+Hurley Group Practice
+North West London Hospitals NHS Trust
+Victoria Station NHS Walk In Centre
+Redcar And Cleveland PCT
+The Gloucestershire Care Services National Health Service Trust
+Derbyshire Community Health Services NHS Foundation Trust
+GreenWiCh Teaching PCT
+Trafford Health Centre
+Primecare Primary Care - Hereford
+Hertfordshire Community NHS Trust
+Stockport NHS Foundation Trust
+Ashford And St Peter's Hospitals NHS Foundation Trust
+South Tyneside PCT
+Barkantine Practice
+Royal Free London NHS Foundation Trust
+Humber Teaching NHS Foundation Trust
+Coventry And Warwickshire Partnership NHS Trust
+Westminster Primary Care Trust
+Bolton PCT
+East Lancashire Hospitals NHS Trust
