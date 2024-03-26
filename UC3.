@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import approxQuantile, year
+from pyspark.sql.functions import year, expr, row_number
+from pyspark.sql.window import Window
 
 # Create SparkSession
 spark = SparkSession.builder \
@@ -11,12 +12,33 @@ spark = SparkSession.builder \
 # Extract year from Period column
 trust_df = trust_df.withColumn("Year", year("Period"))
 
-# Group by Year and calculate median Type1_Departments_Major_A&E value
-quantiles = trust_df.groupby("Year")\
-                    .agg(approxQuantile("Type1_Departments_Major_A&E", [0.5], 0.0).alias("Median_Type1_Dept_Major_A&E_attd"))
+# Calculate the median using window function
+window_spec = Window.partitionBy("Year").orderBy("Type1_Departments_Major_A&E")
+trust_df = trust_df.withColumn("Row_Num", row_number().over(window_spec))
+trust_df.createOrReplaceTempView("trust_temp")
+
+trend_analysis_df = spark.sql("""
+    SELECT Year, 
+           avg(Type1_Departments_Major_A&E) AS Median_Type1_Departments_Major_A&E
+    FROM (
+        SELECT Year,
+               Type1_Departments_Major_A&E,
+               Row_Num,
+               count(*) AS Count
+        FROM trust_temp
+        GROUP BY Year, Type1_Departments_Major_A&E, Row_Num
+        HAVING Row_Num >= Count / 2
+        ORDER BY Year
+    )
+    GROUP BY Year
+    ORDER BY Year
+""")
 
 # Show the trend analysis
-quantiles.orderBy("Year").show()
+trend_analysis_df.show()
+
+# Stop SparkSession
+spark.stop()
 
 
 
