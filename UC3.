@@ -1,6 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import year, expr, row_number
-from pyspark.sql.window import Window
+from pyspark.sql.functions import year, expr
 
 # Create SparkSession
 spark = SparkSession.builder \
@@ -12,35 +11,24 @@ spark = SparkSession.builder \
 # Extract year from Period column
 trust_df = trust_df.withColumn("Year", year("Period"))
 
-# Calculate the median using window function
-window_spec = Window.partitionBy("Year").orderBy("Type1_Departments_Major_A&E")
-trust_df = trust_df.withColumn("Row_Num", row_number().over(window_spec))
-trust_df.createOrReplaceTempView("trust_temp")
+# Calculate median Type1_Departments_Major_A&E value for each year
+median_expr = expr("approxQuantile(Type1_Departments_Major_A&E, 0.5, 10000)[0]")
+median_analysis_df = trust_df.groupBy("Year") \
+    .agg(median_expr.alias("Median_Type1_Departments_Major_A&E"))
 
-trend_analysis_df = spark.sql("""
-    SELECT Year, 
-           avg(Type1_Departments_Major_A&E) AS Median_Type1_Departments_Major_A&E
-    FROM (
-        SELECT Year,
-               Type1_Departments_Major_A&E,
-               Row_Num,
-               count(*) AS Count
-        FROM trust_temp
-        GROUP BY Year, Type1_Departments_Major_A&E, Row_Num
-        HAVING Row_Num >= Count / 2
-        ORDER BY Year
-    )
-    GROUP BY Year
-    ORDER BY Year
-""")
+# Calculate the overall median
+overall_median = trust_df.approxQuantile("Type1_Departments_Major_A&E", [0.5], 10000)[0]
+
+# Calculate the average of medians for each year
+trend_analysis_df = median_analysis_df \
+    .selectExpr("Year", f"'{overall_median}' AS Overall_Median", "Median_Type1_Departments_Major_A&E") \
+    .withColumn("Yearly_Trend", expr("Median_Type1_Departments_Major_A&E - Overall_Median"))
 
 # Show the trend analysis
-trend_analysis_df.show()
+trend_analysis_df.orderBy("Year").show()
 
 # Stop SparkSession
 spark.stop()
-
-
 
 
 import pandas as pd
