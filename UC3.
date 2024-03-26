@@ -13,21 +13,14 @@ spark = SparkSession.builder \
 trust_names = [
     "Royal Devon And Exeter NHS Foundation Trust",
     "West Hertfordshire Hospitals NHS Trust",
-    "West Lancashire Healthcare Partnership Community Cic (Sdgh)",
-    "Hull Teaching PCT",
-    "Chesterfield Royal Hospital NHS Foundation Trust",
-    "Assura Vertis Urgent Care Centres (Birmingham)",
     # Add remaining trust names here...
 ]
 
-# Ensure unique Trust Names
-unique_trust_names = list(set(trust_names))
-
 # List of Trust Codes (based on Trust Names)
-trust_codes = [hash(name) % (10 ** 6) for name in unique_trust_names]
+trust_codes = [hash(name) % (10 ** 6) for name in trust_names]
 
 # Generate DataFrame for Trusts
-trust_df = spark.createDataFrame(zip(unique_trust_names, trust_codes), ["Trust_Name", "Trust_Code"])
+trust_df = spark.createDataFrame(zip(trust_names, trust_codes), ["Trust_Name", "Trust_Code"])
 
 # Add Type1_Departments_Major_A&E column
 trust_df = trust_df.withColumn("Type1_Departments_Major_A&E", expr(f"int(rand() * (300000 - 200000) + 200000)"))
