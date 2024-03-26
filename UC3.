@@ -12,14 +12,17 @@ spark = SparkSession.builder \
 trust_df = trust_df.withColumn("Year", year("Period"))
 
 # Group by Year and calculate median Type1_Departments_Major_A&E value
+median_expr = expr("approxQuantile(Type1_Departments_Major_A&E, array(0.5), 10000)[0]")
 trend_analysis_df = trust_df.groupBy("Year") \
-    .agg(expr("percentile_approx(Type1_Departments_Major_A&E, 0.5)").alias("Median_Type1_Departments_Major_A&E"))
+    .agg(median_expr.alias("Median_Type1_Departments_Major_A&E"))
 
 # Show the trend analysis
 trend_analysis_df.orderBy("Year").show()
 
 # Stop SparkSession
 spark.stop()
+
+
 
 
 import pandas as pd
