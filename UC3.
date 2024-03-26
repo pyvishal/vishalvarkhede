@@ -1,44 +1,22 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, rand, expr
-from pyspark.sql.types import TimestampType
-import random
-from datetime import datetime, timedelta
+from pyspark.sql.functions import year, avg
 
 # Create SparkSession
 spark = SparkSession.builder \
-    .appName("Trust Data Creation") \
+    .appName("Yearly Trend Analysis") \
     .getOrCreate()
 
-# List of Trust Names
-trust_names = [
-    "Royal Devon And Exeter NHS Foundation Trust",
-    "West Hertfordshire Hospitals NHS Trust",
-    # Add remaining trust names here...
-]
+# Assuming trust_df is already created with the data
 
-# List of Trust Codes (based on Trust Names)
-trust_codes = [hash(name) % (10 ** 6) for name in trust_names]
+# Extract year from Period column
+trust_df = trust_df.withColumn("Year", year("Period"))
 
-# Generate DataFrame for Trusts
-trust_df = spark.createDataFrame(zip(trust_names, trust_codes), ["Trust_Name", "Trust_Code"])
+# Group by Year and calculate average Type1_Departments_Major_A&E value
+trend_analysis_df = trust_df.groupBy("Year") \
+    .agg(avg("Type1_Departments_Major_A&E").alias("Avg_Type1_Departments_Major_A&E"))
 
-# Add Type1_Departments_Major_A&E column
-trust_df = trust_df.withColumn("Type1_Departments_Major_A&E", expr(f"int(rand() * (300000 - 200000) + 200000)"))
-
-# Add Period column with timestamp between 2018 to 2023
-start_date = datetime(2018, 1, 1)
-end_date = datetime(2023, 12, 31)
-date_range = end_date - start_date
-trust_df = trust_df.withColumn("Period", expr(f"date_add(to_date('{start_date}'), int(rand() * {date_range.days}))"))
-
-# Add Emergency Admission Via Type1 A&E in 4 hrs column
-trust_df = trust_df.withColumn("Emergency_Admission_Via_Type1_A&E_in_4_hrs", expr(f"int(rand() * (10000 - 1000) + 1000)"))
-
-# Select 1000 random records
-trust_df = trust_df.orderBy(rand()).limit(1000)
-
-# Show DataFrame
-trust_df.show(truncate=False)
+# Show the trend analysis
+trend_analysis_df.orderBy("Year").show()
 
 # Stop SparkSession
 spark.stop()
