@@ -1,13 +1,15 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lit, rand, unix_timestamp, from_unixtime
-from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col, rand, expr
+from pyspark.sql.types import TimestampType
+import random
+from datetime import datetime, timedelta
 
-# Initialize SparkSession
+# Create SparkSession
 spark = SparkSession.builder \
-    .appName("EmployeeData") \
+    .appName("Trust Data Creation") \
     .getOrCreate()
 
-# Trust names list
+# List of Trust Names
 trust_names = [
     "Royal Devon And Exeter NHS Foundation Trust",
     "West Hertfordshire Hospitals NHS Trust",
@@ -15,34 +17,35 @@ trust_names = [
     "Hull Teaching PCT",
     "Chesterfield Royal Hospital NHS Foundation Trust",
     "Assura Vertis Urgent Care Centres (Birmingham)",
-    "Epsom And St Helier University Hospitals NHS Trust",
-    "Norwich Practices Ltd (Castle Mall)",
-    "Peterborough PCT",
-    "Malling Health - Telford Wic",
-    # Add all the trust names here
+    # Add remaining trust names here...
 ]
 
-# Create DataFrame with Trust Names
-trust_df = spark.createDataFrame([(i + 1000001, name) for i, name in enumerate(trust_names)], ["trust_code", "Trust_Name"])
+# Ensure unique Trust Names
+unique_trust_names = list(set(trust_names))
 
-# Create DataFrame with employee details
-employee_df = trust_df.crossJoin(
-    spark.range(1, 201).withColumnRenamed("id", "employee_id")
-)
+# List of Trust Codes (based on Trust Names)
+trust_codes = [hash(name) % (10 ** 6) for name in unique_trust_names]
 
-# Generate random Type1_Departments_Major_A&E between 200000 to 300000
-employee_df = employee_df.withColumn("Type1_Departments_Major_A&E", (rand() * 100000 + 200000).cast(IntegerType()))
+# Generate DataFrame for Trusts
+trust_df = spark.createDataFrame(zip(unique_trust_names, trust_codes), ["Trust_Name", "Trust_Code"])
 
-# Generate random period between 2018 to 2023 and format date as mm/dd/yyyy
-employee_df = employee_df.withColumn("period", from_unixtime(unix_timestamp(lit('2018-01-01')) + (rand() * 157766400), 'MM/dd/yyyy'))
+# Add Type1_Departments_Major_A&E column
+trust_df = trust_df.withColumn("Type1_Departments_Major_A&E", expr(f"int(rand() * (300000 - 200000) + 200000)"))
 
-# Generate random emergency_admission_via_Type1_A&E_in_4_hrs between 1000 to 10000
-employee_df = employee_df.withColumn("emergency_admission_via_Type1_A&E_in_4_hrs", (rand() * 9000 + 1000).cast(IntegerType()))
+# Add Period column with timestamp between 2018 to 2023
+start_date = datetime(2018, 1, 1)
+end_date = datetime(2023, 12, 31)
+date_range = end_date - start_date
+trust_df = trust_df.withColumn("Period", expr(f"date_add(to_date('{start_date}'), int(rand() * {date_range.days}))"))
 
-# Show the DataFrame
-employee_df.show()
+# Add Emergency Admission Via Type1 A&E in 4 hrs column
+trust_df = trust_df.withColumn("Emergency_Admission_Via_Type1_A&E_in_4_hrs", expr(f"int(rand() * (10000 - 1000) + 1000)"))
+
+# Select 200 random records
+trust_df = trust_df.orderBy(rand()).limit(200)
+
+# Show DataFrame
+trust_df.show(truncate=False)
 
 # Stop SparkSession
 spark.stop()
-
-
