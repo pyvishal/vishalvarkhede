@@ -20,3 +20,20 @@ trend_analysis_df.orderBy("Year").show()
 
 # Stop SparkSession
 spark.stop()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Convert Spark DataFrame to Pandas DataFrame
+trend_analysis_pd = trend_analysis_df.toPandas()
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.plot(trend_analysis_pd['Year'], trend_analysis_pd['Avg_Type1_Departments_Major_A&E'], marker='o', linestyle='-')
+plt.title('Yearly Trend Analysis of Type1_Departments_Major_A&E')
+plt.xlabel('Year')
+plt.ylabel('Average Type1_Departments_Major_A&E')
+plt.grid(True)
+plt.xticks(trend_analysis_pd['Year'])
+plt.tight_layout()
+plt.show()
