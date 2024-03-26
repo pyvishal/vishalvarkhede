@@ -1,10 +1,50 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
+from pyspark.sql.functions import col, lit, rand, unix_timestamp
+from pyspark.sql.types import IntegerType
 
-# Create SparkSession
+# Initialize SparkSession
 spark = SparkSession.builder \
-    .appName("NHS England A&E Activity") \
+    .appName("EmployeeData") \
     .getOrCreate()
+
+# Trust names list
+trust_names = [
+    "Royal Devon And Exeter NHS Foundation Trust",
+    "West Hertfordshire Hospitals NHS Trust",
+    "West Lancashire Healthcare Partnership Community Cic (Sdgh)",
+    "Hull Teaching PCT",
+    "Chesterfield Royal Hospital NHS Foundation Trust",
+    "Assura Vertis Urgent Care Centres (Birmingham)",
+    "Epsom And St Helier University Hospitals NHS Trust",
+    "Norwich Practices Ltd (Castle Mall)",
+    "Peterborough PCT",
+    "Malling Health - Telford Wic",
+    # Add all the trust names here
+]
+
+# Create DataFrame with Trust Names
+trust_df = spark.createDataFrame([(i + 1000001, name) for i, name in enumerate(trust_names)], ["trust_code", "Trust_Name"])
+
+# Create DataFrame with employee details
+employee_df = trust_df.crossJoin(
+    spark.range(1, 201).withColumnRenamed("id", "employee_id")
+)
+
+# Generate random Type1_Departments_Major_A&E between 200000 to 300000
+employee_df = employee_df.withColumn("Type1_Departments_Major_A&E", (rand() * 100000 + 200000).cast(IntegerType()))
+
+# Generate random period between 2018 to 2023
+employee_df = employee_df.withColumn("period", (rand() * 157766400 + unix_timestamp('2018-01-01')).cast("timestamp"))
+
+# Generate random emergency_admission_via_Type1_A&E_in_4_hrs between 1000 to 10000
+employee_df = employee_df.withColumn("emergency_admission_via_Type1_A&E_in_4_hrs", (rand() * 9000 + 1000).cast(IntegerType()))
+
+# Show the DataFrame
+employee_df.show()
+
+# Stop SparkSession
+spark.stop()
+
 
 Royal Devon And Exeter NHS Foundation Trust
 West Hertfordshire Hospitals NHS Trust
