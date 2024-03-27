@@ -1,57 +1,64 @@
-To forecast the number of employees after the employees left the organization until December 2023 and to show the forecasted trend of employees leaving in quarters for 2023 to 2024, you can follow these steps:
+To perform the forecasting using Spark, you can follow these steps:
 
-1. Prepare the data:
-   - Merge the two dataframes based on the organization name or code.
+1. Load the dataframes into Spark DataFrames.
+2. Prepare the data:
+   - Join the two DataFrames based on the organization name or code.
    - Calculate the number of employees who left the organization for each period (quarter or month) until December 2023.
-
-2. Choose a forecasting model:
-   - You can use time series forecasting models such as ARIMA, Prophet, or Exponential Smoothing for forecasting the number of employees.
-   
-3. Train the forecasting model:
-   - Use historical data (2018 to 2023) to train the forecasting model. The historical data should include the number of employees who left the organization for each period.
-   
-4. Forecast the number of employees:
+3. Choose a forecasting model:
+   - You can use Spark MLlib or external libraries compatible with Spark, such as Facebook Prophet, to perform forecasting.
+4. Train the forecasting model:
+   - Use historical data (2018 to 2023) to train the forecasting model.
+5. Forecast the number of employees:
    - Use the trained model to forecast the number of employees for the period from January 2024 to December 2024.
+6. Visualize the forecasted trend:
+   - Plot the forecasted trend of employees leaving in quarters for 2023 to 2024 using suitable visualization libraries compatible with Spark.
 
-5. Visualize the forecasted trend:
-   - Plot the forecasted trend of employees leaving in quarters for 2023 to 2024.
-
-Here's a Python code example using Facebook Prophet for forecasting:
+Here's a high-level example code using PySpark and Prophet for forecasting:
 
 ```python
-import pandas as pd
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import quarter
 from fbprophet import Prophet
-import matplotlib.pyplot as plt
 
-# Assuming df_org contains organization data and df_emp contains employee leaving data
+# Create SparkSession
+spark = SparkSession.builder \
+    .appName("Employee Forecasting") \
+    .getOrCreate()
+
+# Assuming df_org_spark contains organization data and df_emp_spark contains employee leaving data
 
 # Merge the two dataframes based on organization name or code
-merged_df = pd.merge(df_org, df_emp, on='organization_name', how='left')
+merged_df_spark = df_org_spark.join(df_emp_spark, df_org_spark.organization_name == df_emp_spark.organization_name, "left_outer")
 
-# Convert date columns to datetime objects
-merged_df['date_of_joining'] = pd.to_datetime(merged_df['date_of_joining'])
-merged_df['date_of_leaving'] = pd.to_datetime(merged_df['date_of_leaving'])
+# Calculate the number of employees who left the organization for each quarter until Dec 2023
+employee_left_count_spark = merged_df_spark.groupBy(quarter("date_of_leaving").alias("quarter")).count()
 
-# Calculate the number of employees who left the organization for each period until Dec 2023
-employee_left_count = merged_df.groupby(pd.Grouper(key='date_of_leaving', freq='Q')).size().reset_index(name='count')
+# Convert Spark DataFrame to Pandas DataFrame for compatibility with Prophet
+employee_left_count_pd = employee_left_count_spark.toPandas()
 
 # Rename columns for Prophet compatibility
-employee_left_count.rename(columns={'date_of_leaving': 'ds', 'count': 'y'}, inplace=True)
+employee_left_count_pd.rename(columns={'quarter': 'ds', 'count': 'y'}, inplace=True)
 
 # Train Prophet model
 model = Prophet()
-model.fit(employee_left_count)
+model.fit(employee_left_count_pd)
 
 # Make future dataframe for forecasting (Jan 2024 to Dec 2024)
-future = model.make_future_dataframe(periods=4, freq='Q')  # Assuming quarterly forecasting for 2024
-forecast = model.predict(future)
+future_pd = model.make_future_dataframe(periods=4, freq='Q')  # Assuming quarterly forecasting for 2024
 
-# Plot the forecasted trend
-fig = model.plot(forecast)
-plt.title('Forecasted Trend of Employees Leaving (2023-2024)')
-plt.xlabel('Date')
-plt.ylabel('Number of Employees Leaving')
-plt.show()
+# Convert Pandas DataFrame back to Spark DataFrame
+future_spark = spark.createDataFrame(future_pd)
+
+# Forecast the number of employees
+forecast_spark = model.predict(future_pd)
+
+# Show forecasted trend (convert to Spark DataFrame if necessary)
+forecast_spark.show()
+
+# Visualize the forecasted trend (using suitable visualization libraries compatible with Spark)
+# Example: Convert forecast_spark to Pandas DataFrame and then plot using matplotlib
+forecast_pd = forecast_spark.toPandas()
+forecast_pd.plot(x='ds', y='yhat', title='Forecasted Trend of Employees Leaving (2023-2024)')
 ```
 
-You may need to adjust the code according to your specific data structure and requirements. Additionally, consider evaluating the model's performance and tuning parameters based on your data characteristics.
+Ensure that you have installed the required libraries (such as Prophet) on all Spark nodes if you are running in a distributed environment. Adjust the code according to your specific data structure and requirements.
