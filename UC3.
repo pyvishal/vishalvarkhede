@@ -1,12 +1,57 @@
+To forecast the number of employees after the employees left the organization until December 2023 and to show the forecasted trend of employees leaving in quarters for 2023 to 2024, you can follow these steps:
 
-Royal Free London NHS Foundation Trust
+1. Prepare the data:
+   - Merge the two dataframes based on the organization name or code.
+   - Calculate the number of employees who left the organization for each period (quarter or month) until December 2023.
 
-Royal National Orthopaedic Hospital NHS Trust
+2. Choose a forecasting model:
+   - You can use time series forecasting models such as ARIMA, Prophet, or Exponential Smoothing for forecasting the number of employees.
+   
+3. Train the forecasting model:
+   - Use historical data (2018 to 2023) to train the forecasting model. The historical data should include the number of employees who left the organization for each period.
+   
+4. Forecast the number of employees:
+   - Use the trained model to forecast the number of employees for the period from January 2024 to December 2024.
 
-St Andrews Walk-In Centre
+5. Visualize the forecasted trend:
+   - Plot the forecasted trend of employees leaving in quarters for 2023 to 2024.
 
-St George's University Hospitals NHS Foundation Trust
+Here's a Python code example using Facebook Prophet for forecasting:
 
-The Barkantine Practice
+```python
+import pandas as pd
+from fbprophet import Prophet
+import matplotlib.pyplot as plt
 
-The Hillingdon Hospitals NHS Foundation Trust
+# Assuming df_org contains organization data and df_emp contains employee leaving data
+
+# Merge the two dataframes based on organization name or code
+merged_df = pd.merge(df_org, df_emp, on='organization_name', how='left')
+
+# Convert date columns to datetime objects
+merged_df['date_of_joining'] = pd.to_datetime(merged_df['date_of_joining'])
+merged_df['date_of_leaving'] = pd.to_datetime(merged_df['date_of_leaving'])
+
+# Calculate the number of employees who left the organization for each period until Dec 2023
+employee_left_count = merged_df.groupby(pd.Grouper(key='date_of_leaving', freq='Q')).size().reset_index(name='count')
+
+# Rename columns for Prophet compatibility
+employee_left_count.rename(columns={'date_of_leaving': 'ds', 'count': 'y'}, inplace=True)
+
+# Train Prophet model
+model = Prophet()
+model.fit(employee_left_count)
+
+# Make future dataframe for forecasting (Jan 2024 to Dec 2024)
+future = model.make_future_dataframe(periods=4, freq='Q')  # Assuming quarterly forecasting for 2024
+forecast = model.predict(future)
+
+# Plot the forecasted trend
+fig = model.plot(forecast)
+plt.title('Forecasted Trend of Employees Leaving (2023-2024)')
+plt.xlabel('Date')
+plt.ylabel('Number of Employees Leaving')
+plt.show()
+```
+
+You may need to adjust the code according to your specific data structure and requirements. Additionally, consider evaluating the model's performance and tuning parameters based on your data characteristics.
