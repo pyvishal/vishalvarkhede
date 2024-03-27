@@ -1,7 +1,4 @@
 
-
-
-
 from pyspark.sql.functions import expr, col, round, when, lit, udf
 from pyspark.sql.types import IntegerType
 from datetime import datetime
