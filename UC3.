@@ -1,7 +1,14 @@
 
-from pyspark.sql.functions import expr
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+import random
 
-# Assuming trust_names_df is a DataFrame containing the Trust Names
+# Create SparkSession
+spark = SparkSession.builder \
+    .appName("Employee Trust Assignment") \
+    .getOrCreate()
+
+# List of Trust Names
 trust_names = [
     "Barking, Havering And Redbridge University Hospitals NHS Trust",
     "Barts Health NHS Trust",
@@ -13,10 +20,20 @@ trust_names = [
     "Edmonton GP Walk In Centre"
 ]
 
-trust_names_df = spark.createDataFrame([(name,) for name in trust_names], ["Trust_Names"])
+# Create DataFrame for Trust Names
+trust_df = spark.createDataFrame([(name,) for name in trust_names], ["Trust_Name"])
 
-# Join the existing DataFrame with the Trust Names DataFrame based on a common key
-new_df = new_df.crossJoin(trust_names_df)
+# Generate employee IDs starting from '1000001'
+emp_ids = [str(i) for i in range(1000001, 1000001 + 136)]
+
+# Assign random Trust Names to each employee
+random_trust_names = [random.choice(trust_names) for _ in range(136)]
+
+# Create DataFrame for employee IDs and assigned Trust Names
+emp_trust_df = spark.createDataFrame(zip(emp_ids, random_trust_names), ["Emp_ID", "Trust_Name"])
 
 # Display the DataFrame
-new_df.show(truncate=False)
+emp_trust_df.show(truncate=False)
+
+# Stop SparkSession
+spark.stop()
