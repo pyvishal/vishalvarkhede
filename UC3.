@@ -1,72 +1,22 @@
 
-from pyspark.sql.functions import expr, col, round, when, lit, udf
-from pyspark.sql.types import IntegerType
-from datetime import datetime
-import random
+from pyspark.sql.functions import expr
 
-# Assuming join_df_senti is the DataFrame containing the data
-new_df = join_df_senti
+# Assuming trust_names_df is a DataFrame containing the Trust Names
+trust_names = [
+    "Barking, Havering And Redbridge University Hospitals NHS Trust",
+    "Barts Health NHS Trust",
+    "Beckenham Beacon Ucc",
+    "Central London Community Healthcare NHS Trust",
+    "Chelsea And Westminster Hospital NHS Foundation Trust",
+    "Croydon Health Services NHS Trust",
+    "Dmc Vicarage Lane",
+    "Edmonton GP Walk In Centre"
+]
 
-# Define a function to calculate the day of the week (1 for Monday, 7 for Sunday)
-def get_day_of_week(date_str):
-    date_obj = datetime.strptime(date_str, "%m/%d/%Y")
-    return (date_obj.weekday() + 1) % 7 + 1  # Adjusted for weekday numbering (1 for Monday, 7 for Sunday)
+trust_names_df = spark.createDataFrame([(name,) for name in trust_names], ["Trust_Names"])
 
-# Define a function to extract the month of the year
-def get_month_of_year(date_str):
-  date_obj = datetime.strptime(date_str, "%m/%d/%Y")
-  return date_obj.month  # Month as an integer (1 for January, 12 for December)
+# Join the existing DataFrame with the Trust Names DataFrame based on a common key
+new_df = new_df.crossJoin(trust_names_df)
 
-# Register the UDF
-spark.udf.register("get_day_of_week", get_day_of_week)
-
-# Register the UDF
-get_month_udf = udf(get_month_of_year, IntegerType())  # Specify return type as integer
-spark.udf.register("get_month_of_year", get_month_udf)
-
-# Calculate the day of the week
-new_df = new_df.withColumn("day_of_week", expr("get_day_of_week(DateofLeaving)"))
-
-# Generate random sick leave days (8 hours per day) for weekdays
-new_df = new_df.withColumn("sick_leave_days", expr("round(rand() * 5)"))
-
-# Create a dictionary mapping OrganizationType to contracted hours per week
-contracted_hours_mapping = {
-    "Chief Nurse": 40,
-    "Emergency Care Assistant": 35,
-    "Junior Doctor": 45,
-    "Senior Doctor": 50,
-    "Theatre Support Worker": 38,
-    "Nurse Practitioner": 37,
-    "Newly Qualified Nurse": 36
-}
-
-# Add a new column for contracted hours per week based on OrganizationType
-new_df = new_df.withColumn("contracted_hrs_per_week",
-                            when(new_df["OrganizationType"] ==  "Chief Nurse", lit(40))
-                            .when(new_df["OrganizationType"] == "Emergency Care Assistant", lit(35))
-                            .when(new_df["OrganizationType"] == "Junior Doctor", lit(45))
-                            .when(new_df["OrganizationType"] == "Senior Doctor", lit(42))
-                            .when(new_df["OrganizationType"] == "Theatre Support Worker", lit(38))
-                            .when(new_df["OrganizationType"] == "Nurse Practitioner", lit(40))
-                            .when(new_df["OrganizationType"] == "Newly Qualified Nurse", lit(36))
-                            .otherwise(lit(40)))  # Default value
-
-# Calculate completed hours per week based on contracted hours and sick leave days
-new_df = new_df.withColumn("completed_hrs_per_week", expr("abs(contracted_hrs_per_week - sick_leave_days * 8)"))
-
-# Calculate months worked
-new_df = new_df.withColumn("months_worked", expr("get_month_of_year(DateofLeaving)-1"))
-
-# Calculate weeks worked
-new_df = new_df.withColumn("weeks_worked", expr("months_worked * 4"))
-
-# Generate random numbers for Contracted_Hrs_YTD
-new_df = new_df.withColumn("Contracted_Hrs_YTD", expr("ROUND(RAND() * (2000 - 1400) + 1400, 2)"))
-
-# Calculate completed hours YTD
-new_df = new_df.withColumn("completed_hrs_YTD", expr("CASE WHEN Contracted_Hrs_YTD > 1600 THEN ROUND(RAND() * (1600 - 1400) + 1400, 2) ELSE ROUND(RAND() * Contracted_Hrs_YTD, 2) END"))
-
-new_df = new_df.select('ID','OrganizationType','Transfer_Types','TypeOfAppointment','Country','County','Town','DestinationCountry','DestinationCounty','Destinationtown','ManagerID','DateofJoining','DateofLeaving', 'Tenure','Gender','Recuritment', 'DOB','Reasonforchange','Total_Leaves','Balance_leaves','Contracted_Hrs_per_week','Completed_hrs_per_week','Contracted_Hrs_YTD','Completed_Hrs_YTD','Sick_hours')
-# Display the dataframe
-new_df.display()
+# Display the DataFrame
+new_df.show(truncate=False)
