@@ -1,21 +1,63 @@
-merged_df_spark.select('Trust_Code','ID','Trusts_Name','Period','OrganizationType','DateofLeaving',
- 'Type1_Depts_Major_A&E','Emergency_Admission_Via_Type1_A&E_in_4_hrs','OrganizationType',
- 'Transfer_Types','TypeOfAppointment','Country','County','Town','DestinationCountry','DestinationCounty',
- 'Destinationtown','ManagerID','DateofJoining','DateofLeaving','Tenure','Gender','Recuritment',
- 'DOB','Reasonforchange','Total_Leaves','Balance_leaves','Contracted_Hrs_per_week','Completed_hrs_per_week',
- 'Contracted_Hrs_YTD','Completed_Hrs_YTD').display()
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import year, month, quarter, count
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.regression import LinearRegression
 
-To perform the forecasting using Spark, you can follow these steps:
+# Create SparkSession
+spark = SparkSession.builder \
+    .appName("Employee Forecasting") \
+    .getOrCreate()
 
-1. Load the dataframes into Spark DataFrames.
-2. Prepare the data:
-   - Join the two DataFrames based on the organization name or code.
-   - Calculate the number of employees who left the organization for each period (quarter or month) until December 2023.
-3. Choose a forecasting model:
-   - You can use Spark MLlib or external libraries compatible with Spark, such as Facebook Prophet, to perform forecasting.
-4. Train the forecasting model:
-   - Use historical data (2018 to 2023) to train the forecasting model.
-5. Forecast the number of employees:
-   - Use the trained model to forecast the number of employees for the period from January 2024 to December 2024.
-6. Visualize the forecasted trend:
-   - Plot the forecasted trend of employees leaving in quarters for 2023 to 2024 using suitable visualization libraries compatible with Spark.
+# Assuming merged_df_spark is the DataFrame containing the data
+# Assuming DateofLeaving is in date format
+
+# Load the DataFrame into a Spark DataFrame
+merged_df_spark = spark.createDataFrame(merged_df)
+
+# Extract year, quarter, and month from the DateofLeaving column
+merged_df_spark = merged_df_spark.withColumn("Year", year("DateofLeaving"))
+merged_df_spark = merged_df_spark.withColumn("Quarter", quarter("DateofLeaving"))
+merged_df_spark = merged_df_spark.withColumn("Month", month("DateofLeaving"))
+
+# Group by year and quarter to calculate the number of employees who left
+employees_left_per_quarter = merged_df_spark.groupBy("Year", "Quarter").agg(count("*").alias("EmployeesLeft")).orderBy("Year", "Quarter")
+
+# Prepare features for linear regression
+assembler = VectorAssembler(inputCols=["Year", "Quarter"], outputCol="features")
+
+# Apply the VectorAssembler to the DataFrame
+input_df = assembler.transform(employees_left_per_quarter)
+
+# Train a linear regression model
+lr = LinearRegression(featuresCol="features", labelCol="EmployeesLeft")
+model = lr.fit(input_df)
+
+# Forecast for the period January 2024 to December 2024
+forecast_df = spark.createDataFrame([(2024, quarter) for quarter in range(1, 5)], ["Year", "Quarter"])
+forecast_df = assembler.transform(forecast_df)
+forecast_df = model.transform(forecast_df)
+
+# Show the forecasted results
+forecast_df.select("Year", "Quarter", "prediction").show()
+
+# Stop SparkSession
+spark.stop()
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Convert the forecast DataFrame to a Pandas DataFrame for visualization
+forecast_pd = forecast_df.select("Year", "Quarter", "prediction").toPandas()
+
+# Plot the forecasted trend
+plt.figure(figsize=(10, 6))
+plt.plot(forecast_pd["Year"].astype(str) + " Q" + forecast_pd["Quarter"].astype(str), forecast_pd["prediction"], marker='o')
+plt.title("Forecasted Trend of Employees Leaving (2024)")
+plt.xlabel("Quarter")
+plt.ylabel("Number of Employees")
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
