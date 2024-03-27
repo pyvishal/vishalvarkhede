@@ -1,39 +1,12 @@
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-import random
+Royal Free London NHS Foundation Trust
 
-# Create SparkSession
-spark = SparkSession.builder \
-    .appName("Employee Trust Assignment") \
-    .getOrCreate()
+Royal National Orthopaedic Hospital NHS Trust
 
-# List of Trust Names
-trust_names = [
-    "Barking, Havering And Redbridge University Hospitals NHS Trust",
-    "Barts Health NHS Trust",
-    "Beckenham Beacon Ucc",
-    "Central London Community Healthcare NHS Trust",
-    "Chelsea And Westminster Hospital NHS Foundation Trust",
-    "Croydon Health Services NHS Trust",
-    "Dmc Vicarage Lane",
-    "Edmonton GP Walk In Centre"
-]
+St Andrews Walk-In Centre
 
-# Create DataFrame for Trust Names
-trust_df = spark.createDataFrame([(name,) for name in trust_names], ["Trust_Name"])
+St George's University Hospitals NHS Foundation Trust
 
-# Generate employee IDs starting from '1000001'
-emp_ids = [str(i) for i in range(1000001, 1000001 + 136)]
+The Barkantine Practice
 
-# Assign random Trust Names to each employee
-random_trust_names = [random.choice(trust_names) for _ in range(136)]
-
-# Create DataFrame for employee IDs and assigned Trust Names
-emp_trust_df = spark.createDataFrame(zip(emp_ids, random_trust_names), ["Emp_ID", "Trust_Name"])
-
-# Display the DataFrame
-emp_trust_df.show(truncate=False)
-
-# Stop SparkSession
-spark.stop()
+The Hillingdon Hospitals NHS Foundation Trust
