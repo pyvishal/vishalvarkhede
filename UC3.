@@ -35,6 +35,7 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
     forecast_results[org_type] = forecast
 
 # 5. Apply the forecasted values to the relevant analysis or reporting
+# Print forecast results
 for org_type, forecast in forecast_results.items():
     print(f"Forecast for {org_type}: {forecast}")
 
