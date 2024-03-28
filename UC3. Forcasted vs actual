@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+from fbprophet import Prophet
 
 # Initialize SparkSession
 spark = SparkSession.builder \
@@ -12,31 +12,35 @@ aggregated_df = merged_df_spark.groupBy('OrganizationType', 'Quarterly_Trend_Num
 # Create an empty DataFrame to hold forecast results
 forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1_2024 INT, Q2_2024 INT, Q3_2024 INT, Q4_2024 INT")
 
-# Train SARIMA model for each OrganizationType and forecast for 2024 quarters
+# Train Prophet model for each OrganizationType and forecast for 2024 quarters
 for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
     org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
     org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
 
-    # Convert DataFrame to Pandas for SARIMA model
+    # Convert DataFrame to Pandas for Prophet model
     pandas_df = org_type_df.toPandas()
-    pandas_df.set_index('Quarterly_Trend_Num', inplace=True)
+    pandas_df.rename(columns={'Quarterly_Trend_Num': 'ds', 'count': 'y'}, inplace=True)
 
-    # Train SARIMA model
-    model = SARIMAX(pandas_df['count'], order=(1, 0, 0), seasonal_order=(1, 0, 0, 4))
-    fitted_model = model.fit()
+    # Train Prophet model
+    model = Prophet()
+    model.fit(pandas_df)
 
-    # Forecast for 2024 quarters and round the values to integers
-    forecast = fitted_model.forecast(steps=4).round().astype(int)
+    # Forecast for 2024 quarters
+    future = model.make_future_dataframe(periods=4, freq='Q')
+    forecast = model.predict(future)
+
+    # Extract forecasted values for 2024 quarters
+    forecast_values = forecast[['ds', 'yhat']][-4:].values.tolist()
+    forecast_values = [(org_type,) + tuple([int(round(value)) for value in values[1:]]) for values in forecast_values]
 
     # Create DataFrame for the forecast results
-    forecast_values = [(org_type,) + tuple(forecast)]
     forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Q1_2024 INT, Q2_2024 INT, Q3_2024 INT, Q4_2024 INT")
 
     # Union the forecast DataFrame with the overall forecast DataFrame
     forecast_df = forecast_df.union(forecast_org_type_df)
 
 # Display forecast DataFrame
-forecast_df.show()
+forecast_df.display()
 
 # Stop SparkSession
 spark.stop()
