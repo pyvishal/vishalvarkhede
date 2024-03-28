@@ -12,7 +12,7 @@ spark = SparkSession.builder \
 aggregated_df = merged_df_spark.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
 # Create an empty DataFrame to hold forecast results
-forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Quarters ARRAY<STRING>, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
+forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Quarter STRING, Value INT")
 
 # Train ARIMA model for each OrganizationType and forecast for 2024 quarters
 for org_type_row in aggregated_df.select('OrganizationType').distinct().collect():
@@ -33,12 +33,11 @@ for org_type_row in aggregated_df.select('OrganizationType').distinct().collect(
 
     # Create DataFrame for the forecast results
     quarters = ['Q1', 'Q2', 'Q3', 'Q4']
-    forecast_values = [(org_type, quarters, *forecast)]
-    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Quarters ARRAY<STRING>, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
+    forecast_values = [(org_type, quarter, value) for quarter, value in zip(quarters, forecast)]
+    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Quarter STRING, Value INT")
 
     # Union the forecast DataFrame with the overall forecast DataFrame
     forecast_df = forecast_df.union(forecast_org_type_df)
 
 # Display forecast DataFrame
 forecast_df.show()
-
