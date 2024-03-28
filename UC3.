@@ -2,7 +2,6 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from statsmodels.tsa.arima.model import ARIMA
 import pandas as pd
-import numpy as np
 
 # Initialize SparkSession
 spark = SparkSession.builder \
@@ -12,8 +11,10 @@ spark = SparkSession.builder \
 # Aggregate data by OrganizationType and quarters of 2023
 aggregated_df = merged_df.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
+# Create an empty DataFrame to hold forecast results
+forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1_2024 DOUBLE, Q2_2024 DOUBLE, Q3_2024 DOUBLE, Q4_2024 DOUBLE")
+
 # Train ARIMA model for each OrganizationType and forecast for 2024 quarters
-forecast_results = {}
 for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
     org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
     org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
@@ -28,20 +29,16 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
 
     # Forecast for 2024 quarters
     forecast = fitted_model.forecast(steps=4)
-    forecast_results[org_type] = forecast
 
-# Convert forecast results to a DataFrame
-forecast_df = pd.DataFrame(forecast_results).T.reset_index()
-forecast_df.columns = ['OrganizationType', 'Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']
+    # Create DataFrame for the forecast results
+    forecast_values = [(org_type,) + tuple(forecast)]
+    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Q1_2024 DOUBLE, Q2_2024 DOUBLE, Q3_2024 DOUBLE, Q4_2024 DOUBLE")
 
-# Ensure all columns have the same length by filling missing values with NaN
-max_length = max(len(forecast) for forecast in forecast_results.values())
-for column in ['Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']:
-    forecast_df[column] = forecast_df[column].apply(lambda x: list(x) + [np.nan] * (max_length - len(x)))
+    # Union the forecast DataFrame with the overall forecast DataFrame
+    forecast_df = forecast_df.union(forecast_org_type_df)
 
 # Display forecast DataFrame
-forecast_spark_df = spark.createDataFrame(forecast_df)
-forecast_spark_df.show()
+forecast_df.show()
 
 # Stop SparkSession
 spark.stop()
