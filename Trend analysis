@@ -1,4 +1,3 @@
-
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from statsmodels.tsa.arima.model import ARIMA
@@ -16,7 +15,8 @@ aggregated_df = merged_df_spark.groupBy('OrganizationType', 'Quarterly_Trend_Num
 forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Quarters ARRAY<STRING>, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
 
 # Train ARIMA model for each OrganizationType and forecast for 2024 quarters
-for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
+for org_type_row in aggregated_df.select('OrganizationType').distinct().collect():
+    org_type = org_type_row['OrganizationType']
     org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
     org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
 
@@ -33,7 +33,7 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
 
     # Create DataFrame for the forecast results
     quarters = ['Q1', 'Q2', 'Q3', 'Q4']
-    forecast_values = [(org_type, quarters, forecast[0], forecast[1], forecast[2], forecast[3])]
+    forecast_values = [(org_type, quarters, *forecast)]
     forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Quarters ARRAY<STRING>, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
 
     # Union the forecast DataFrame with the overall forecast DataFrame
@@ -41,3 +41,4 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
 
 # Display forecast DataFrame
 forecast_df.show()
+
