@@ -1,8 +1,5 @@
-
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from statsmodels.tsa.arima.model import ARIMA
-import pandas as pd
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 # Initialize SparkSession
 spark = SparkSession.builder \
@@ -15,17 +12,17 @@ aggregated_df = merged_df_spark.groupBy('OrganizationType', 'Quarterly_Trend_Num
 # Create an empty DataFrame to hold forecast results
 forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1_2024 INT, Q2_2024 INT, Q3_2024 INT, Q4_2024 INT")
 
-# Train ARIMA model for each OrganizationType and forecast for 2024 quarters
+# Train SARIMA model for each OrganizationType and forecast for 2024 quarters
 for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
     org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
     org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
 
-    # Convert DataFrame to Pandas for ARIMA model
+    # Convert DataFrame to Pandas for SARIMA model
     pandas_df = org_type_df.toPandas()
     pandas_df.set_index('Quarterly_Trend_Num', inplace=True)
 
-    # Train ARIMA model
-    model = ARIMA(pandas_df['count'], order=(1, 0, 0))
+    # Train SARIMA model
+    model = SARIMAX(pandas_df['count'], order=(1, 0, 0), seasonal_order=(1, 0, 0, 4))
     fitted_model = model.fit()
 
     # Forecast for 2024 quarters and round the values to integers
@@ -39,4 +36,7 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
     forecast_df = forecast_df.union(forecast_org_type_df)
 
 # Display forecast DataFrame
-forecast_df.display()
+forecast_df.show()
+
+# Stop SparkSession
+spark.stop()
