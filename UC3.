@@ -1,3 +1,17 @@
+The result numbers signify the forecasted number of employees leaving each organization type for each quarter of the year 2024. Here's what each column represents:
+
+- `OrganizationType`: This column indicates the type of organization for which the forecast is made. Each row corresponds to a specific organization type.
+- `Q1_2024`: This column represents the forecasted number of employees leaving the organization type in the first quarter of 2024 (January to March).
+- `Q2_2024`: This column represents the forecasted number of employees leaving the organization type in the second quarter of 2024 (April to June).
+- `Q3_2024`: This column represents the forecasted number of employees leaving the organization type in the third quarter of 2024 (July to September).
+- `Q4_2024`: This column represents the forecasted number of employees leaving the organization type in the fourth quarter of 2024 (October to December).
+
+Each row in the DataFrame corresponds to a different organization type, and the numbers in the columns represent the forecasted employee leaving counts for each quarter of 2024 for that particular organization type. These forecasts can be used for resource planning, budgeting, or other strategic decisions by the 
+respective organizations.
+
+The code provided performs forecasting for the number of employees leaving each organization type for the four quarters of 2024
+
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from statsmodels.tsa.arima.model import ARIMA
@@ -12,7 +26,7 @@ spark = SparkSession.builder \
 aggregated_df = merged_df.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
 # Create an empty DataFrame to hold forecast results
-forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1_2024 DOUBLE, Q2_2024 DOUBLE, Q3_2024 DOUBLE, Q4_2024 DOUBLE")
+forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1_2024 INT, Q2_2024 INT, Q3_2024 INT, Q4_2024 INT")
 
 # Train ARIMA model for each OrganizationType and forecast for 2024 quarters
 for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
@@ -27,12 +41,12 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
     model = ARIMA(pandas_df['count'], order=(1, 0, 0))
     fitted_model = model.fit()
 
-    # Forecast for 2024 quarters
-    forecast = fitted_model.forecast(steps=4)
+    # Forecast for 2024 quarters and round the values to integers
+    forecast = fitted_model.forecast(steps=4).round().astype(int)
 
     # Create DataFrame for the forecast results
     forecast_values = [(org_type,) + tuple(forecast)]
-    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Q1_2024 DOUBLE, Q2_2024 DOUBLE, Q3_2024 DOUBLE, Q4_2024 DOUBLE")
+    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Q1_2024 INT, Q2_2024 INT, Q3_2024 INT, Q4_2024 INT")
 
     # Union the forecast DataFrame with the overall forecast DataFrame
     forecast_df = forecast_df.union(forecast_org_type_df)
