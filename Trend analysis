@@ -1,27 +1,42 @@
+
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
 
-# Assuming 'spark' is your SparkSession
+# Initialize SparkSession
+spark = SparkSession.builder \
+    .appName("EmployeeLeavingForecasting") \
+    .getOrCreate()
 
-# Sample DataFrame
-data = [("Org1", 10, 20, None, 30),
-        ("Org2", 15, None, 25, 35),
-        ("Org3", 20, 30, 40, 50)]
+# Aggregate data by OrganizationType and quarters of 2023
+aggregated_df = merged_df_spark.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
-columns = ["Organisation_Type", "Q1", "Q2", "Q3", "Q4"]
+# Create an empty DataFrame to hold forecast results
+forecast_df = spark.createDataFrame([], schema="OrganizationType STRING, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
 
-df = spark.createDataFrame(data, columns)
+# Train ARIMA model for each OrganizationType and forecast for 2024 quarters
+for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
+    org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
+    org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
 
-# Calculate count for each quarter
-df = df.selectExpr(
-    "Organisation_Type",
-    "array('Q1', 'Q2', 'Q3', 'Q4') as Quarters",
-    "array(Q1, Q2, Q3, Q4) as Values"
-)
+    # Convert DataFrame to Pandas for ARIMA model
+    pandas_df = org_type_df.toPandas()
+    pandas_df.set_index('Quarterly_Trend_Num', inplace=True)
 
-df = df.selectExpr(
-    "Organisation_Type",
-    "Quarters",
-    "size(filter(Values, x -> x is not null)) as Count"
-)
+    # Train ARIMA model
+    model = ARIMA(pandas_df['count'], order=(1, 0, 0))
+    fitted_model = model.fit()
 
-df.show()
+    # Forecast for 2024 quarters and round the values to integers
+    forecast = fitted_model.forecast(steps=4).round().astype(int)
+
+    # Create DataFrame for the forecast results
+    forecast_values = [(org_type,) + tuple(forecast)]
+    forecast_org_type_df = spark.createDataFrame(forecast_values, schema="OrganizationType STRING, Q1 INT, Q2 INT, Q3 INT, Q4 INT")
+
+    # Union the forecast DataFrame with the overall forecast DataFrame
+    forecast_df = forecast_df.union(forecast_org_type_df)
+
+# Display forecast DataFrame
+forecast_df.display()
