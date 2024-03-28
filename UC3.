@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from statsmodels.tsa.arima.model import ARIMA
 import pandas as pd
+import numpy as np
 
 # Initialize SparkSession
 spark = SparkSession.builder \
@@ -32,6 +33,11 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
 # Convert forecast results to a DataFrame
 forecast_df = pd.DataFrame(forecast_results).T.reset_index()
 forecast_df.columns = ['OrganizationType', 'Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']
+
+# Ensure all columns have the same length by filling missing values with NaN
+max_length = max(len(forecast) for forecast in forecast_results.values())
+for column in ['Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']:
+    forecast_df[column] = forecast_df[column].apply(lambda x: np.nan if len(x) < max_length else x)
 
 # Display forecast DataFrame
 forecast_spark_df = spark.createDataFrame(forecast_df)
