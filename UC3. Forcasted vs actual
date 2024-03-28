@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, lit
 from statsmodels.tsa.arima.model import ARIMA
 import pandas as pd
 
@@ -12,8 +12,11 @@ spark = SparkSession.builder \
 actual_df = merged_df.filter((col('DateofLeaving') >= '2023-01-01') & (col('DateofLeaving') <= '2023-12-31')) \
                      .groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
+# Create empty dataframe for forecasted counts
+forecast_schema = "OrganizationType STRING, Quarterly_Trend_Num STRING, count INT"
+forecast_df = spark.createDataFrame([], schema=forecast_schema)
+
 # Forecast for 2024 quarters
-forecast_results = {}
 for org_type in actual_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
     org_type_df = actual_df.filter(col('OrganizationType') == org_type)
     org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
@@ -28,14 +31,17 @@ for org_type in actual_df.select('OrganizationType').distinct().rdd.flatMap(lamb
 
     # Forecast for 2024 quarters and round the values to integers
     forecast = fitted_model.forecast(steps=4).round().astype(int)
-    forecast_results[org_type] = forecast
 
-# Create a DataFrame for the forecasted counts
-forecast_df = pd.DataFrame(forecast_results).T.reset_index()
-forecast_df.columns = ['OrganizationType', 'Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']
+    # Create DataFrame for the forecast results
+    forecast_values = [(org_type, f'Q{i+1}_2024', forecast[i]) for i in range(4)]
+    forecast_org_type_df = spark.createDataFrame(forecast_values, schema=forecast_schema)
 
-# Join actual and forecasted counts, and include forecasted organization types
-combined_df = actual_df.union(spark.createDataFrame(forecast_df))
+    # Union the forecast DataFrame with the overall forecast DataFrame
+    forecast_df = forecast_df.union(forecast_org_type_df)
+
+# Union actual and forecasted counts, and include forecasted organization types
+combined_df = actual_df.union(forecast_df.withColumn('OrganizationType', col('OrganizationType'))
+                                           .withColumn('count', lit(None)))
 
 # Display the combined DataFrame
 combined_df.show()
