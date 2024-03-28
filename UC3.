@@ -1,22 +1,17 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from statsmodels.tsa.arima.model import ARIMA
+import pandas as pd
 
 # Initialize SparkSession
 spark = SparkSession.builder \
     .appName("EmployeeLeavingForecasting") \
     .getOrCreate()
 
-# 1. Filter data for the year 2023
-filtered_df = merged_df.filter((col('DateofLeaving') >= '2023-01-01') & (col('DateofLeaving') <= '2023-12-31'))
+# Aggregate data by OrganizationType and quarters of 2023
+aggregated_df = merged_df.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
 
-# 2. Aggregate data by OrganizationType and quarters of 2023
-aggregated_df = filtered_df.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
-
-# 3. Prepare features for forecasting (if using machine learning models)
-# No feature preparation needed for ARIMA model
-
-# 4. Train ARIMA model for each OrganizationType
+# Train ARIMA model for each OrganizationType and forecast for 2024 quarters
 forecast_results = {}
 for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
     org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
@@ -34,10 +29,13 @@ for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(
     forecast = fitted_model.forecast(steps=4)
     forecast_results[org_type] = forecast
 
-# 5. Apply the forecasted values to the relevant analysis or reporting
-# Print forecast results
-for org_type, forecast in forecast_results.items():
-    print(f"Forecast for {org_type}: {forecast}")
+# Convert forecast results to a DataFrame
+forecast_df = pd.DataFrame(forecast_results).T.reset_index()
+forecast_df.columns = ['OrganizationType', 'Q1_2024', 'Q2_2024', 'Q3_2024', 'Q4_2024']
+
+# Display forecast DataFrame
+forecast_spark_df = spark.createDataFrame(forecast_df)
+forecast_spark_df.show()
 
 # Stop SparkSession
 spark.stop()
