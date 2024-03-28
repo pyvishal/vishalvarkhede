@@ -1,13 +1,60 @@
-from pyspark.sql.functions import year, month, quarter, count, expr, col
+mergedf=mergedf.select('Trust_Code',
+ 'Trust_Name',
+ 'Period',
+ 'Type1_Depts_Major_A&E',
+ 'Emergency_Admission_Via_Type1_A&E_in_4_hrs',
+ 'Emp_ID',
+ 'Emp_Name',
+ 'Gender',
+ 'Country',
+ 'County',
+ 'Town',
+ 'TypeOfAppointment',
+ 'DateofJoining',
+ 'DateofLeaving',
+ 'Tenure',
+ 'Transfer_Types',
+ 'Target_Location',
+ 'Dest_On_Leaving',
+ 'Dest_Org_On_Leaving',
+ 'Dest_Trust_Code_On_Leaving',
+ 'Flow_Month_Of_Leaving',
+ 'Recruitment_Org',
+ 'Recruitment_Trust_Code',
+ 'Source_Of_Recruitment',
+ 'Job_Type',
+ 'ExitInterview_Completed',
+ 'Manager_ID',
+ 'Total_Leaves',
+ 'Balance_Leaves',
+ 'DOB',
+ 'Reason_For_Leaving',
+ 'What_sector_will_you_be_joining_in_your_new_role?',
+ 'I_have_been_able_to_make_suggestions_to_improve_the_work_of_my_team_/_department',
+ 'I_have_been_able_to_make_improvements_happen_in_my_area_of_work',
+ 'I_often/always_looked_forward_to_going_to_work',
+ 'I_was_often/always_enthusiastic_about_my_job',
+ 'Time_often/always_passed_quickly_when_I_was_working',
+ 'Does_your_organisation_take_positive_action_on_health_and_well-being?',
+ 'Does_your_organisation_act_fairly_with_regard_to_career_progression/promotion?',
+ 'Does_your_organisation_provide_opportunities_for_flexible_working_patterns?',
+ 'I_felt_my_contribution_was_valued_by_my_manager/team/organisation?',
+ 'How_satisfied_are_you_with_your_overall_experience_at_the_organization?',
+ 'old_Is_there_anything_that_would_have_made_you_stay_in_your_current_role_or_organisation?',
+ 'Contracted_Hrs_per_week',
+ 'Completed_hrs_per_week',
+ 'Contracted_Hrs_YTD',
+ 'Completed_Hrs_YTD',
+ 'sick_hours',
+ 'value',
+ 'Is_there_anything_that_would_have_made_you_stay_in_your_current_role_or_organisation?',
+ 'sentiment',
+ 'polarity',
+ 'OrganizationType',
+ 'ID',
+ 'Trusts_Name',
+ 'Quarterly_Trend',
+ 'Month_Of_Leaving',
+ 'Quarterly_Trend_Num',
+ 'Year_Of_Leaving')
 
-# Extract year, quarter, and month from the DateofLeaving column
-merged_df_spark = merged_df_spark.withColumn("Year", year("DateofLeaving"))
-merged_df_spark = merged_df_spark.withColumn("Quarter", quarter("DateofLeaving"))
-merged_df_spark = merged_df_spark.withColumn("Month", month("DateofLeaving"))
-
-# Group by year and quarter to calculate the number of employees who left
-employees_left_per_quarter = merged_df_spark.groupBy("Year", "Quarter").agg(count("*").alias("EmployeesLeft")).orderBy("Year", "Quarter")
-
-employees_left_per_quarter.display()
-
-IllegalArgumentException: All week-based patterns are unsupported since Spark 3.0, detected: u, Please use the SQL function EXTRACT instead
