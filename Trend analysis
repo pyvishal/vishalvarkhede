@@ -4,34 +4,30 @@ forecast_df.columns
 Trend_2023.columns
 ['OrganizationType', 'Quarterly_Trend_Num', 'count']
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.expressions.Window
-
-// Create SparkSession
-val spark = SparkSession.builder()
-  .appName("Trend Line Plot")
-  .getOrCreate()
-
-// Assuming you have loaded your DataFrames forecast_df and Trend_2023
-
-// Calculate trend lines for 2023
-val trend_2023_with_trend = Trend_2023.withColumn("trend", avg($"count").over(Window.partitionBy("OrganizationType").orderBy("Quarterly_Trend_Num").rowsBetween(-1,1)))
-
-// Convert Spark DataFrame to Pandas DataFrame for plotting
-val forecast_df_df = forecast_df.toPandas()
-val trend_2023_df = trend_2023_with_trend.toPandas()
-
-// Plot trend lines for 2023
 import matplotlib.pyplot as plt
+import pandas as pd
 
-plt.figure(figsize=(10,6))
-for org_type, data in trend_2023_df.groupby("OrganizationType"):
-    plt.plot(data["Quarterly_Trend_Num"], data["count"], label=org_type)
-    plt.plot(data["Quarterly_Trend_Num"], data["trend"], linestyle='--', label=f"Trend {org_type} 2023")
+# Assuming you have PySpark dataframes forecast_df and Trend_2023
 
-plt.xlabel("Quarter")
-plt.ylabel("Value")
-plt.title("Trend Line Plot for 2023")
+# Assuming Trend_2023 contains actual data for 2023 and Trend_2024 contains predicted data for 2024
+
+# Convert PySpark dataframes to Pandas dataframes
+forecast_df_pd = forecast_df.toPandas()
+Trend_2023_pd = Trend_2023.toPandas()
+Trend_2024_pd = Trend_2024.toPandas()
+
+# Plotting trend lines for 2023 and 2024
+plt.figure(figsize=(10, 6))
+
+# Plot trend line for 2023
+plt.plot(Trend_2023_pd['Quarterly_Trend_Num'], Trend_2023_pd['count'], label='Actual Trend 2023')
+
+# Plot trend line for 2024
+plt.plot(Trend_2024_pd['Quarterly_Trend_Num'], Trend_2024_pd['count'], label='Predicted Trend 2024')
+
+plt.xlabel('Quarterly Trend')
+plt.ylabel('Count')
+plt.title('Comparison of Trend Lines for 2023 and 2024')
 plt.legend()
+plt.grid(True)
 plt.show()
