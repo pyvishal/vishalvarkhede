@@ -1,0 +1,27 @@
+from pyspark.sql import SparkSession
+
+# Assuming 'spark' is your SparkSession
+
+# Sample DataFrame
+data = [("Org1", 10, 20, None, 30),
+        ("Org2", 15, None, 25, 35),
+        ("Org3", 20, 30, 40, 50)]
+
+columns = ["Organisation_Type", "Q1", "Q2", "Q3", "Q4"]
+
+df = spark.createDataFrame(data, columns)
+
+# Calculate count for each quarter
+df = df.selectExpr(
+    "Organisation_Type",
+    "array('Q1', 'Q2', 'Q3', 'Q4') as Quarters",
+    "array(Q1, Q2, Q3, Q4) as Values"
+)
+
+df = df.selectExpr(
+    "Organisation_Type",
+    "Quarters",
+    "size(filter(Values, x -> x is not null)) as Count"
+)
+
+df.show()
