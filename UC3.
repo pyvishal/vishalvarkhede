@@ -1,39 +1,42 @@
-mergedf=mergedf.select('Trust_Code',
- 'Trust_Name',
- 'Period',
- 'Type1_Depts_Major_A&E',
- 'Emergency_Admission_Via_Type1_A&E_in_4_hrs',
- 'Emp_ID',
- 'TypeOfAppointment',
- 'DateofJoining',
- 'DateofLeaving',
- 'Tenure',
- 'Transfer_Types',
- 'Target_Location',
- 'Dest_On_Leaving',
- 'Dest_Org_On_Leaving',
- 'Dest_Trust_Code_On_Leaving',
- 'Flow_Month_Of_Leaving',
- 'Recruitment_Org',
- 'Recruitment_Trust_Code',
- 'Source_Of_Recruitment',
- 'Job_Type',
- 'ExitInterview_Completed',
- 'Manager_ID',
- 'Total_Leaves',
- 'Balance_Leaves',
- 'DOB',
- 'Reason_For_Leaving',
- 'Contracted_Hrs_per_week',
- 'Completed_hrs_per_week',
- 'Contracted_Hrs_YTD',
- 'Completed_Hrs_YTD',
- 'sick_hours',
- 'OrganizationType',
- 'ID',
- 'Trusts_Name',
- 'Quarterly_Trend',
- 'Month_Of_Leaving',
- 'Quarterly_Trend_Num',
- 'Year_Of_Leaving')
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+from statsmodels.tsa.arima.model import ARIMA
 
+# Initialize SparkSession
+spark = SparkSession.builder \
+    .appName("EmployeeLeavingForecasting") \
+    .getOrCreate()
+
+# 1. Filter data for the year 2023
+filtered_df = merged_df.filter((col('DateofLeaving') >= '2023-01-01') & (col('DateofLeaving') <= '2023-12-31'))
+
+# 2. Aggregate data by OrganizationType and quarters of 2023
+aggregated_df = filtered_df.groupBy('OrganizationType', 'Quarterly_Trend_Num').count()
+
+# 3. Prepare features for forecasting (if using machine learning models)
+# No feature preparation needed for ARIMA model
+
+# 4. Train ARIMA model for each OrganizationType
+forecast_results = {}
+for org_type in aggregated_df.select('OrganizationType').distinct().rdd.flatMap(lambda x: x).collect():
+    org_type_df = aggregated_df.filter(col('OrganizationType') == org_type)
+    org_type_df = org_type_df.orderBy('Quarterly_Trend_Num')
+
+    # Convert DataFrame to Pandas for ARIMA model
+    pandas_df = org_type_df.toPandas()
+    pandas_df.set_index('Quarterly_Trend_Num', inplace=True)
+
+    # Train ARIMA model
+    model = ARIMA(pandas_df['count'], order=(1, 0, 0))
+    fitted_model = model.fit()
+
+    # Forecast for 2024 quarters
+    forecast = fitted_model.forecast(steps=4)
+    forecast_results[org_type] = forecast
+
+# 5. Apply the forecasted values to the relevant analysis or reporting
+for org_type, forecast in forecast_results.items():
+    print(f"Forecast for {org_type}: {forecast}")
+
+# Stop SparkSession
+spark.stop()
