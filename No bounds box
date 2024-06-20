@@ -1,0 +1,29 @@
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+from PIL import Image
+
+# Load the image
+image_path = 'path_to_your_image.jpg'
+image = Image.open(image_path)
+image = np.array(image)
+
+# Define bounding boxes
+# Each bounding box is defined as [x, y, width, height]
+bounding_boxes = [
+    [50, 50, 100, 150],   # Example bounding box 1
+    [200, 80, 120, 100],  # Example bounding box 2
+    [300, 200, 50, 80]    # Example bounding box 3
+]
+
+# Create figure and axes
+fig, ax = plt.subplots(1)
+ax.imshow(image)
+
+# Add the bounding boxes to the image
+for bbox in bounding_boxes:
+    rect = patches.Rectangle((bbox[0], bbox[1]), bbox[2], bbox[3], linewidth=2, edgecolor='r', facecolor='none')
+    ax.add_patch(rect)
+
+# Display the image with bounding boxes
+plt.show()
