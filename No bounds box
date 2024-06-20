@@ -1,40 +1,30 @@
 import cv2
 import matplotlib.pyplot as plt
 
-def detect_objects(image_path):
-    # Load the image
-    image = cv2.imread(image_path)
-    if image is None:
-        print(f"Error loading image {image_path}")
-        return
-
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur to the grayscale image
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # Perform edge detection using Canny
-    edges = cv2.Canny(blurred, 50, 150)
-
-    # Find contours in the edged image
-    contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Loop over the contours to draw bounding boxes
-    for contour in contours:
-        if cv2.contourArea(contour) > 100:  # Filter out small contours
-            (x, y, w, h) = cv2.boundingRect(contour)
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    # Convert the image from BGR to RGB
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    # Display the image with bounding boxes using matplotlib
-    plt.figure(figsize=(10, 10))
-    plt.imshow(image_rgb)
-    plt.axis('off')
-    plt.show()
-
-# Path to your image file
+# Load the image
 image_path = 'path_to_your_image.jpg'
-detect_objects(image_path)
+image = cv2.imread(image_path)
+
+# Convert to grayscale
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Apply Canny edge detector
+edges = cv2.Canny(gray, threshold1=50, threshold2=150)
+
+# Find contours
+contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Draw bounding boxes around contours
+for contour in contours:
+    x, y, w, h = cv2.boundingRect(contour)
+    cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+# Display the image with bounding boxes
+plt.figure(figsize=(10, 10))
+plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+plt.title(f'Detected Objects: {len(contours)}')
+plt.axis('off')
+plt.show()
+
+# Print the count of detected objects
+print(f'Number of detected objects: {len(contours)}')
