@@ -1,8 +1,36 @@
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
+
+# Function to adjust image contrast
+def adjust_contrast(image, clip_limit=2.0, tile_grid_size=(8, 8)):
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+    cl = clahe.apply(l)
+    limg = cv2.merge((cl, a, b))
+    return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+# Function to sharpen the image
+def sharpen_image(image):
+    kernel = np.array([[0, -1, 0],
+                       [-1, 5,-1],
+                       [0, -1, 0]])
+    return cv2.filter2D(image, -1, kernel)
+
+# Function to denoise the image
+def denoise_image(image):
+    return cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
 
 # Load the image
 image = cv2.imread('path_to_your_image.jpg')
+
+# Preprocess the image
+image = adjust_contrast(image)
+image = sharpen_image(image)
+image = denoise_image(image)
+
+# Convert to grayscale and blur
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
