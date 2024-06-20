@@ -2,62 +2,64 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Function to adjust image contrast using histogram equalization
-def adjust_contrast(image):
-    img_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-    img_yuv[:, :, 0] = cv2.equalizeHist(img_yuv[:, :, 0])
-    return cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+# Function to preprocess the image
+def preprocess_image(image):
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Enhance contrast using CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+    
+    # Sharpen the image
+    kernel_sharpening = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+    sharpened = cv2.filter2D(enhanced, -1, kernel_sharpening)
+    
+    # Denoise the image
+    denoised = cv2.fastNlMeansDenoising(sharpened, h=10, templateWindowSize=7, searchWindowSize=21)
+    
+    return denoised
 
-# Function to sharpen the image
-def sharpen_image(image):
-    kernel = np.array([[0, -1, 0],
-                       [-1, 5, -1],
-                       [0, -1, 0]])
-    return cv2.filter2D(image, -1, kernel)
-
-# Function to denoise the image while preserving edges
-def denoise_image(image):
-    return cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
+# Function to detect objects using bounding boxes
+def detect_objects(image):
+    # Apply binary thresholding
+    _, thresh = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
+    
+    # Perform edge detection
+    edges = cv2.Canny(thresh, 30, 100)
+    
+    # Find contours
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Define a minimum area to consider as "big"
+    min_area = 1000  # Adjust this value based on your requirements
+    
+    # List to hold bounding boxes of big objects
+    big_objects = []
+    
+    # Filter contours based on area
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > min_area:
+            x, y, w, h = cv2.boundingRect(contour)
+            big_objects.append((x, y, w, h))
+            # Draw the bounding box (optional for visualization)
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    
+    return image, big_objects
 
 # Load the image
 image = cv2.imread('path_to_your_image.jpg')
 
 # Preprocess the image
-image = adjust_contrast(image)
-image = sharpen_image(image)
-image = denoise_image(image)
+processed_image = preprocess_image(image.copy())
 
-# Convert to grayscale
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-# Apply adaptive thresholding
-thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                               cv2.THRESH_BINARY_INV, 11, 2)
-
-# Perform edge detection
-edges = cv2.Canny(thresh, 50, 150)
-
-# Find contours
-contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Define a minimum area to consider as "big"
-min_area = 1000  # Adjust this value based on your requirements
-
-# List to hold bounding boxes of big objects
-big_objects = []
-
-# Filter contours based on area
-for contour in contours:
-    area = cv2.contourArea(contour)
-    if area > min_area:
-        x, y, w, h = cv2.boundingRect(contour)
-        big_objects.append((x, y, w, h))
-        # Draw the bounding box
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+# Detect objects using bounding boxes
+processed_image, big_objects = detect_objects(processed_image)
 
 # Display the result using matplotlib
 plt.figure(figsize=(10, 10))
-plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+plt.imshow(cv2.cvtColor(processed_image, cv2.COLOR_BGR2RGB))
 plt.title(f'Detected Big Objects: {len(big_objects)}')
 plt.axis('off')
 plt.show()
