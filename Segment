@@ -1,0 +1,13 @@
+# Extract the filename without the extension
+# filename_without_extension = re.sub(r'\. [^ .]*$', '', image_file)
+filename_without_extension = image_file split('•')[e]
+print(filename_without_extension)
+# Create the output folder based on the filename
+output_folder = filename_without_extension
+if not os-path.exists(output_folder):
+os- makedirs (output_folder)
+for i, mask in enumerate (masks) :
+mask_image = np-array (mask[' segmentation' ]).astype(np.uint8) # Extract the region using the mask
+region = cv. bitwise_and (image, image, mask=mask_image) # Convert from BGR to RGB
+region_rgb = cv2. cvtColor (region, cv2. COLOR_BGR2RGB||
+cv2. imwrite(f' (output_folder}/region_(1}-jpg', region_rgb)
