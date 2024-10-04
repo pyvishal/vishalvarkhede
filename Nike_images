@@ -1,0 +1,22 @@
+print("*######################################₩#################################
+#############*)
+Sanses-FilepathList=list(df_count_filtered[~df_count_filtered['SAM_MASK_filepath']•isna()].SAM_MASK_filepath)
+Sanses filepathlist, duplicate_rejected_list=remove_duplicate_Masks (Samseg filepathlist)
+split dict_ list, Sanses filepathlist, merged rejected list getSplismersedmask (Sanses filepathlist) split_filepath_list=get_splits_filepath(folder_path, split_dict_list)
+Samseg_filepathlist=Samseg_filepathlist+split_filepath_list
+Samseg_filepathlist,duplicate_rejected_list=remove_duplicate Masks(Samseg_filepathlist)
+mask_df[ 'SAM_MASK_filepath' ] = mask_df.apply(save_mask,folder_path=folder_path, axis=1)
+full_SAM MASK_filepath_list = [path for path in mask_df[ 'SAM_MASK_filepath'] if path |= -1]
+Samseg_filepathlist=Samseg_filepathlist+full_SAM_MASK_filepath_list
+Samseg_ Filepathlist, duplicate_rejected_ list=remove _duplicate Masks(Samseg_filepathlist) img_seg_folder_name=img_path-split(*/')[-1]-split('•')[®]
+final_segment_path = ' •/segment_results/'+img_seg_folder_name+*/' create_dir (final_segment_path) for segpath in Samseg_filepathlist:
+curmask=cv2. imread (segpath, cv2. IMREAD_GRAYSCALE)
+height, width=curmask. shape imein curmask=org_image. copy ()
+for y in range (height): for x in range(width):
+curmaskLy,x]==0:
+imein curmaskLy,x]=[®,0,0]
+seg_imgname=segpath-split (*/')[-1]
+I
+print (seg_imgname)
+[83]
+cv2. imrite(final_segment_path+img_seg_folder_name +'-' + seg_imgname, imein_curmask)
