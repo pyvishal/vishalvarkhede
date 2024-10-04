@@ -20,3 +20,20 @@ I
 print (seg_imgname)
 [83]
 cv2. imrite(final_segment_path+img_seg_folder_name +'-' + seg_imgname, imein_curmask)
+
+
+Eyelets
+Foxing
+Heel
+Mudguard
+Shoe_Closure_Type
+Tongue_Label
+Collar
+Eyestay
+Laces
+Midsole
+Outsole
+Quarter
+Swoosh
+Tongue
+Vamp
