@@ -1,0 +1,50 @@
+{
+  "Style": "Casual",
+  "Model_Name": "Sneaker_Y",
+  "View_Code": "Side_View",
+  "File_Name": "sneaker_image_02",
+  "Delete Flag": "True",
+  "Components": [
+    {
+      "Component_Name": "Laces",
+      "Material": "Cotton",
+      "Color": "Black"
+    },
+    {
+      "Component_Name": "Sole",
+      "Material": "Rubber",
+      "Color": "White"
+    }
+  ]
+}
+
+import boto3
+import json
+
+def get_shoe_components(Style, Model_Name, View_Code, File_Name):
+    s3 = boto3.client('s3')
+    JSON_Path = "s3://Bucket_Name/Source_Image_Data"
+    
+    # Construct file path and list of objects to return
+    Shoe_Folder = File_Name.split(">")[0]
+    path = f"{JSON_Path}/{Style}_{View_Code}/{Shoe_Folder}/Segments"
+    
+    # List all JSON files in the path
+    json_files = s3.list_objects_v2(Bucket='Bucket_Name', Prefix=path).get('Contents', [])
+    result_list = []
+
+    for file in json_files:
+        # Load JSON content
+        response = s3.get_object(Bucket='Bucket_Name', Key=file['Key'])
+        json_content = json.loads(response['Body'].read().decode('utf-8'))
+        
+        # Check filters and delete flag
+        if (json_content.get("Style") == Style and
+            json_content.get("Model_Name") == Model_Name and
+            json_content.get("View_Code") == View_Code and
+            json_content.get("File_Name") == File_Name and
+            json_content.get("Delete Flag") != "True"):
+            result_list.append(json_content)
+
+    return result_list
+
