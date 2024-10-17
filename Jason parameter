@@ -18,33 +18,32 @@
   ]
 }
 
-import boto3
+import os
 import json
 
-def get_shoe_components(Style, Model_Name, View_Code, File_Name):
-    s3 = boto3.client('s3')
-    JSON_Path = "s3://Bucket_Name/Source_Image_Data"
-    
-    # Construct file path and list of objects to return
-    Shoe_Folder = File_Name.split(">")[0]
-    path = f"{JSON_Path}/{Style}_{View_Code}/{Shoe_Folder}/Segments"
-    
-    # List all JSON files in the path
-    json_files = s3.list_objects_v2(Bucket='Bucket_Name', Prefix=path).get('Contents', [])
+def get_shoe_components(Style, Model_Name, View_Code, File_Name, folder_path):
     result_list = []
-
-    for file in json_files:
-        # Load JSON content
-        response = s3.get_object(Bucket='Bucket_Name', Key=file['Key'])
-        json_content = json.loads(response['Body'].read().decode('utf-8'))
-        
-        # Check filters and delete flag
-        if (json_content.get("Style") == Style and
-            json_content.get("Model_Name") == Model_Name and
-            json_content.get("View_Code") == View_Code and
-            json_content.get("File_Name") == File_Name and
-            json_content.get("Delete Flag") != "True"):
-            result_list.append(json_content)
-
+    
+    # Iterate through all JSON files in the specified folder
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith('.json'):
+            file_path = os.path.join(folder_path, file_name)
+            
+            # Load JSON content from the file
+            with open(file_path, 'r') as file:
+                json_content = json.load(file)
+                
+                # Check filters and delete flag
+                if (json_content.get("Style") == Style and
+                    json_content.get("Model_Name") == Model_Name and
+                    json_content.get("View_Code") == View_Code and
+                    json_content.get("File_Name") == File_Name and
+                    json_content.get("Delete Flag") != "True"):
+                    result_list.append(json_content)
+    
     return result_list
 
+# Usage example
+folder_path = 'path/to/your/json/folder'
+components = get_shoe_components("Classic", "ModelX", "001", "shoe_image_001.jpg", folder_path)
+print(components)
