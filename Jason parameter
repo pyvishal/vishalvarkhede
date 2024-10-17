@@ -18,6 +18,15 @@
   ]
 }
 
+{
+  "Style": "Classic",
+  "Model_Name": "ModelX",
+  "View_Code": "001",
+  "File_Name": "placeholder_image_name.jpg",
+  "folder_path": "path/to/your/json/folder"
+}
+
+
 import os
 import json
 
